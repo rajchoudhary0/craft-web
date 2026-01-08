@@ -22,7 +22,7 @@ const formatPrice = (price: number) => {
 
 export default function ProductsPage() {
   const { categories } = useCategories();
-  const [showFilters, setShowFilters] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState('All');
   const [sortBy, setSortBy] = useState('newest');
   
