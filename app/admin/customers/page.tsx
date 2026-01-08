@@ -43,11 +43,18 @@ export default function AdminCustomersPage() {
     setIsLoading(true);
 
     // Fetch profiles
-    const { data: profiles } = await supabase
+    const { data: profiles, error } = await supabase
       .from('profiles')
       .select('id, email, full_name, created_at');
 
+    if (error) {
+      console.error('Error fetching customers:', JSON.stringify(error, null, 2));
+      setIsLoading(false);
+      return;
+    }
+
     if (!profiles) {
+      console.warn('No profiles found');
       setIsLoading(false);
       return;
     }
