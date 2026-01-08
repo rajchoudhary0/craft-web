@@ -33,6 +33,11 @@ export default function GiftCardsPage() {
 
   const fetchGiftCards = async () => {
     setIsLoading(true);
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
+
     // Fetch products with type 'gift_card'
     const { data, error } = await supabase
       .from('products')
