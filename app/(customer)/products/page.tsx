@@ -45,7 +45,7 @@ export default function ProductsPage() {
 
   // All categories including "All"
   const allCategories = useMemo(() => {
-    return ['All', ...categories.map(c => c.name)];
+    return ['All', ...categories.filter(c => c.name !== 'Gift Cards').map(c => c.name)];
   }, [categories]);
 
   // Client-side sorting (since hook does basic filtering)

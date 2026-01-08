@@ -14,6 +14,7 @@ export interface Product {
   story: string;
   inStock: boolean;
   quantity: number;
+  type?: string;
 }
 
 // Testimonial types

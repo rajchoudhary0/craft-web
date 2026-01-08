@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ArrowLeft, Tag, Gift } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ArrowLeft, Tag, Gift, AlertCircle } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { formatPrice } from '@/lib/data';
 import { staggerContainer, fadeInUp } from '@/lib/animations';
@@ -12,7 +12,7 @@ import Button from '@/components/ui/Button';
 import { useState } from 'react';
 
 export default function CartPage() {
-  const { items, totalItems, totalPrice, updateQuantity, removeItem, clearCart, applyCoupon, removeCoupon, discount, finalPrice, giftCard, applyGiftCard, removeGiftCard } = useCart();
+  const { items, totalItems, totalPrice, updateQuantity, removeItem, clearCart, applyCoupon, removeCoupon, discount, finalPrice, giftCard, applyGiftCard, removeGiftCard, isPartialDiscount } = useCart();
 
   // Unified Code Handler
   const [code, setCode] = useState('');
@@ -230,22 +230,30 @@ export default function CartPage() {
                 {/* Active Applied Codes List */}
                 <div className="space-y-2 mb-3">
                   {discount && (
-                    <div className="flex items-center justify-between p-3 bg-green-50 text-green-700 rounded-lg border border-green-100">
-                      <div className="flex items-center gap-2">
-                        <Tag className="w-4 h-4" />
-                        <div>
-                          <span className="font-medium block">{discount.code}</span>
-                          <span className="text-xs opacity-80">
-                             {discount.type === 'percentage' ? `${discount.value}% OFF` : `₹${discount.value} OFF`}
-                          </span>
+                    <div className="flex flex-col gap-1 p-3 bg-green-50 text-green-700 rounded-lg border border-green-100">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Tag className="w-4 h-4" />
+                          <div>
+                            <span className="font-medium block">{discount.code}</span>
+                            <span className="text-xs opacity-80">
+                               {discount.type === 'percentage' ? `${discount.value}% OFF` : `₹${discount.value} OFF`}
+                            </span>
+                          </div>
                         </div>
+                        <button 
+                          onClick={removeCoupon}
+                          className="text-xs hover:underline text-green-800 font-medium"
+                        >
+                          Remove
+                        </button>
                       </div>
-                      <button 
-                        onClick={removeCoupon}
-                        className="text-xs hover:underline text-green-800 font-medium"
-                      >
-                        Remove
-                      </button>
+                      {isPartialDiscount && (
+                        <p className="text-[10px] text-green-800/70 mt-1 pl-6 flex items-start gap-1">
+                          <AlertCircle className="w-3 h-3 inline mt-0.5" />
+                          Applies only to physical products, not gift cards.
+                        </p>
+                      )}
                     </div>
                   )}
 

@@ -28,6 +28,8 @@ interface CartContextType {
   removeCoupon: () => void;
   applyGiftCard: (code: string) => Promise<{ success: boolean; message: string }>;
   removeGiftCard: () => void;
+  isPartialDiscount?: boolean;
+  couponApplicableTotal?: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -40,10 +42,40 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const supabase = createClient();
 
+  const [discount, setDiscount] = useState<{
+    code: string;
+    value: number;
+    type: 'percentage' | 'fixed';
+  } | null>(null);
+
+  const [giftCard, setGiftCard] = useState<{
+    code: string;
+    balance: number;
+    appliedAmount: number;
+  } | null>(null);
+
   // Load cart on mount and when user changes
   useEffect(() => {
     loadCart();
+    // Load persisted coupon/gift card
+    if (typeof window !== 'undefined') {
+      const savedDiscount = localStorage.getItem('cart_discount');
+      const savedGiftCard = localStorage.getItem('cart_gift_card');
+      if (savedDiscount) setDiscount(JSON.parse(savedDiscount));
+      if (savedGiftCard) setGiftCard(JSON.parse(savedGiftCard));
+    }
   }, [user]);
+
+  // Save discount/giftCard to local storage when they change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (discount) localStorage.setItem('cart_discount', JSON.stringify(discount));
+      else localStorage.removeItem('cart_discount');
+      
+      if (giftCard) localStorage.setItem('cart_gift_card', JSON.stringify(giftCard));
+      else localStorage.removeItem('cart_gift_card');
+    }
+  }, [discount, giftCard]);
 
   // Load cart from appropriate source
   const loadCart = useCallback(async () => {
@@ -137,7 +169,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           id,
           quantity,
           product:products(
-            id, name, slug, description, price, original_price,
+            id, name, slug, description, price, original_price, type,
             stock, rating, reviews_count,
             category:categories(name),
             images:product_images(image_url),
@@ -163,6 +195,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           category: item.product.category?.name || '',
           images: item.product.images?.map((i: any) => i.image_url) || [],
           tags: item.product.tags?.map((t: any) => t.tag?.name).filter(Boolean) || [],
+          type: item.product.type || 'physical',
         },
         quantity: item.quantity,
       }));
@@ -274,11 +307,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [debouncedSync]
   );
 
-  const [discount, setDiscount] = useState<{
-    code: string;
-    value: number;
-    type: 'percentage' | 'fixed';
-  } | null>(null);
+
 
   // ... (existing useEffects)
 
@@ -290,11 +319,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
 
 
-  const [giftCard, setGiftCard] = useState<{
-    code: string;
-    balance: number;
-    appliedAmount: number;
-  } | null>(null);
+
 
   const applyGiftCard = async (code: string): Promise<{ success: boolean; message: string }> => {
     if (!code) return { success: false, message: 'Please enter a code' };
@@ -324,11 +349,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const removeGiftCard = () => setGiftCard(null);
 
-  const priceAfterDiscount = discount 
+  // Calculate total eligible for coupon (exclude gift cards)
+  const couponApplicableTotal = items
+    .filter(item => item.product.type !== 'gift_card')
+    .reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+
+  const giftCardsTotal = totalPrice - couponApplicableTotal;
+  
+  // Apply discount only to eligible amount
+  const discountAmount = discount 
     ? discount.type === 'percentage'
-      ? totalPrice * (1 - discount.value / 100)
-      : Math.max(0, totalPrice - discount.value)
-    : totalPrice;
+      ? couponApplicableTotal * (discount.value / 100)
+      : Math.min(couponApplicableTotal, discount.value) // Can't discount more than eligible total
+    : 0;
+
+  const priceAfterDiscount = Math.max(0, totalPrice - discountAmount);
+
+  // Expose info for UI if partial application happened
+  const isPartialDiscount = discount && giftCardsTotal > 0;
 
   const giftCardAmount = giftCard 
     ? Math.min(priceAfterDiscount, giftCard.balance) 
@@ -427,7 +465,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         applyCoupon,
         removeCoupon,
         applyGiftCard,
-        removeGiftCard
+        removeGiftCard,
+        isPartialDiscount,
+        couponApplicableTotal,
       }}
     >
       {children}

@@ -14,6 +14,8 @@ interface Product {
   name: string;
   price: number;
   description: string;
+  type: string;
+  images: string[];
 }
 
 export default function GiftCardsPage() {
@@ -34,7 +36,7 @@ export default function GiftCardsPage() {
     // Fetch products with type 'gift_card'
     const { data, error } = await supabase
       .from('products')
-      .select('id, name, price, description')
+      .select('id, name, price, description, type, images')
       .eq('type', 'gift_card')
       .order('price', { ascending: true });
 
