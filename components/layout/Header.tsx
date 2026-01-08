@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Menu, X, Sun, Moon, Search, Heart, ArrowRight, Sparkles } from 'lucide-react';
+import { ShoppingBag, Menu, X, Sun, Moon, Search, Heart, ArrowRight, Sparkles, User } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { useWishlist } from '@/lib/wishlist-context';
+import { useAuth } from '@/lib/auth-context';
 import { products } from '@/lib/data';
 
 const navLinks = [
@@ -24,6 +25,7 @@ export default function Header() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const { totalItems, openCart } = useCart();
   const { items: wishlistItems } = useWishlist();
+  const { user } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -167,6 +169,17 @@ export default function Header() {
                 <Search className="w-5 h-5" />
               </motion.button>
 
+              {/* Account */}
+              <Link href={user ? "/account" : "/login"}>
+                <motion.div
+                  className="w-10 h-10 flex items-center justify-center rounded-full text-text-dark hover:bg-sand hover:text-terracotta transition-all"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <User className="w-5 h-5" />
+                </motion.div>
+              </Link>
+
               {/* Theme */}
               <motion.button
                 onClick={toggleTheme}
@@ -176,7 +189,7 @@ export default function Header() {
               >
                 {theme === 'light' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </motion.button>
-
+              
               {/* Wishlist */}
               <Link href="/wishlist" className="hidden sm:block">
                 <motion.div
@@ -192,7 +205,7 @@ export default function Header() {
                   )}
                 </motion.div>
               </Link>
-
+              
               {/* Cart Button */}
               <motion.button
                 onClick={openCart}
@@ -369,6 +382,21 @@ export default function Header() {
                       </motion.li>
                     );
                   })}
+                  
+                  {/* Auth Link (Mobile) */}
+                   <motion.li
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: navLinks.length * 0.1 }}
+                  >
+                    <Link
+                      href={user ? "/account" : "/login"}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block px-4 py-4 rounded-xl text-lg font-medium text-text-dark hover:bg-sand border-t border-clay/10 mt-2"
+                    >
+                      {user ? "My Account" : "Sign In / Register"}
+                    </Link>
+                  </motion.li>
                 </ul>
               </nav>
 

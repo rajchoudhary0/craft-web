@@ -2,70 +2,115 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { User } from '@supabase/supabase-js';
 
-interface AdminUser {
-  email: string;
-  name: string;
-  role: 'admin' | 'editor';
+interface AdminUser extends User {
+  role?: string;
 }
 
 interface AdminContextType {
   user: AdminUser | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<{ error: string | null }>;
+  logout: () => Promise<void>;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
-
-// Demo credentials
-const DEMO_USERS = [
-  { email: 'admin@thevybestore.com', password: 'admin123', name: 'Neha Kumari', role: 'admin' as const },
-  { email: 'editor@thevybestore.com', password: 'editor123', name: 'Editor', role: 'editor' as const },
-];
 
 export function AdminProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const supabase = createClient();
 
-  // Check for existing session on mount
+  // Check session and role on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem('adminUser');
-    if (storedUser) {
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
+
+    const checkUser = async () => {
       try {
-        setUser(JSON.parse(storedUser));
-      } catch {
-        localStorage.removeItem('adminUser');
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          // Fetch role from profiles
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profile?.role === 'admin') {
+            setUser({ ...session.user, role: profile.role });
+          } else {
+            setUser(null); // Not an admin
+          }
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Admin check error:', error);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
       }
+    };
+
+    checkUser();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setIsLoading(false);
+      } else if (event === 'SIGNED_IN' && session?.user) {
+        // Re-verify role on sign in
+        checkUser(); 
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase]);
+
+  const login = async (email: string, password: string) => {
+    if (!supabase) return { error: 'Supabase not configured' };
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) return { error: error.message };
+
+      if (data.user) {
+        // Check role
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profileError || profile?.role !== 'admin') {
+          await supabase.auth.signOut();
+          return { error: 'Unauthorized access. Admin privileges required.' };
+        }
+        
+        // Success
+        return { error: null };
+      }
+      return { error: 'Login failed' };
+    } catch (err) {
+      return { error: 'An unexpected error occurred' };
     }
-    setIsLoading(false);
-  }, []);
-
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    const matchedUser = DEMO_USERS.find(
-      u => u.email === email && u.password === password
-    );
-
-    if (matchedUser) {
-      const userData: AdminUser = {
-        email: matchedUser.email,
-        name: matchedUser.name,
-        role: matchedUser.role,
-      };
-      setUser(userData);
-      localStorage.setItem('adminUser', JSON.stringify(userData));
-      return true;
-    }
-    return false;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    if (!supabase) return;
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('adminUser');
     router.push('/admin/login');
   };
 
@@ -100,7 +145,7 @@ export function RequireAdmin({ children }: { children: ReactNode }) {
       <div className="min-h-screen flex items-center justify-center bg-cream">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-terracotta border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-text-muted text-sm">Loading studio...</p>
+          <p className="text-text-muted text-sm">Verifying studio access...</p>
         </div>
       </div>
     );

@@ -245,6 +245,34 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           
           <div className="space-y-4">
             <div className="flex gap-3">
+              <div className="relative">
+                <input
+                  type="file"
+                  id="image-upload"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setImages([...images, reader.result as string]);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('image-upload')?.click()}
+                  className="h-full px-4 py-2.5 bg-sand text-text-dark border border-clay/20 rounded-xl hover:bg-sand/80 transition-colors flex items-center gap-2"
+                  title="Upload from device"
+                >
+                  <Upload className="w-5 h-5" />
+                  <span className="hidden sm:inline text-sm font-medium">Upload</span>
+                </button>
+              </div>
+              <div className="text-text-muted flex items-center">or</div>
               <input 
                 type="url" 
                 placeholder="Enter image URL..." 
@@ -258,6 +286,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                 onClick={handleAddImage}
                 disabled={!newImageUrl}
                 className="px-4 py-2.5 bg-terracotta text-cream rounded-xl hover:bg-terracotta-dark disabled:opacity-50 transition-colors"
+                title="Add URL"
               >
                 <Plus className="w-5 h-5" />
               </button>

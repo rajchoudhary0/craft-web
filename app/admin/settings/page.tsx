@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Save, Check, Store, Mail, MapPin, Phone, Globe, Share2 } from 'lucide-react';
+import { Save, Check, Store, Mail, MapPin, Phone, Globe, Share2, Database } from 'lucide-react';
 import { staggerContainer, fadeInUp } from '@/lib/animations';
 
 export default function AdminSettingsPage() {
@@ -43,6 +43,7 @@ export default function AdminSettingsPage() {
     { id: 'store', label: 'Store Info', icon: Store },
     { id: 'social', label: 'Social Links', icon: Share2 },
     { id: 'seo', label: 'SEO', icon: Globe },
+    { id: 'database', label: 'Database', icon: Database },
   ];
 
   return (
@@ -247,23 +248,63 @@ export default function AdminSettingsPage() {
             </div>
           </motion.div>
         )}
+
+        {activeTab === 'database' && (
+          <motion.div
+            key="database"
+            className="bg-cream rounded-2xl p-6 border border-clay/10 space-y-5"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+          >
+            <h3 className="font-serif font-semibold text-text-dark">Database Management</h3>
+            <p className="text-text-muted text-sm">
+              Tools to manage your database connection and data.
+            </p>
+
+            <div className="p-4 bg-sand/30 rounded-xl border border-clay/10">
+              <h4 className="font-medium text-text-dark mb-2">Seed Initial Data</h4>
+              <p className="text-sm text-text-muted mb-4">
+                Populate your database with the initial set of products from the demo data. 
+                This will add products if they don't exist.
+              </p>
+              <button
+                onClick={async () => {
+                   setIsSaving(true);
+                   try {
+                     const response = await fetch('/api/seed', { method: 'POST' });
+                     if (!response.ok) throw new Error('Failed to seed');
+                     setShowSuccess(true);
+                   } catch (error) {
+                     alert('Error seeding database');
+                   } finally {
+                     setIsSaving(false);
+                     setTimeout(() => setShowSuccess(false), 2000);
+                   }
+                }}
+                disabled={isSaving}
+                className="px-4 py-2 bg-terracotta text-cream rounded-lg hover:bg-terracotta-dark disabled:opacity-50 transition-colors"
+              >
+                {isSaving ? 'Seeding...' : 'Seed Database'}
+              </button>
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* Save Button */}
-      <div className="flex justify-end">
-        <motion.button
+      <div className="flex justify-end pt-4">
+        <button
           onClick={handleSave}
           disabled={isSaving}
-          className="flex items-center gap-2 px-6 py-3 bg-terracotta text-cream rounded-xl font-medium hover:bg-terracotta-dark transition-colors disabled:opacity-50"
-          whileHover={{ scale: isSaving ? 1 : 1.02 }}
-          whileTap={{ scale: isSaving ? 1 : 0.98 }}
+          className="flex items-center gap-2 px-6 py-3 bg-terracotta text-cream rounded-xl hover:bg-terracotta-dark disabled:opacity-50 transition-colors"
         >
           {isSaving ? (
             <div className="w-5 h-5 border-2 border-cream border-t-transparent rounded-full animate-spin" />
           ) : (
             <>
               <Save className="w-5 h-5" />
-              Save Settings
+              Save Changes
             </>
           )}
         </motion.button>

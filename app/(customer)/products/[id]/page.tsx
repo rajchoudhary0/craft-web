@@ -1,17 +1,26 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, use } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShoppingBag, Heart, Share2, ChevronLeft, ChevronRight, 
-  Minus, Plus, Check, Truck, Shield, RefreshCw, ChevronDown
+  Minus, Plus, Check, Truck, Shield, RefreshCw, ChevronDown, Loader2
 } from 'lucide-react';
-import { getProductById, formatPrice, products, Product } from '@/lib/data';
+import { useProduct, useProducts } from '@/lib/hooks/use-products';
 import { useCart } from '@/lib/cart-context';
 import { staggerContainer, fadeInUp } from '@/lib/animations';
 import Button from '@/components/ui/Button';
+
+// Format price in INR
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 0,
+  }).format(price);
+};
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -19,19 +28,25 @@ interface ProductPageProps {
 
 export default function ProductPage({ params }: ProductPageProps) {
   const resolvedParams = use(params);
-  const [product, setProduct] = useState<Product | null>(null);
+  const { product, isLoading, error } = useProduct(resolvedParams.id);
+  const { products: allProducts } = useProducts();
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isZoomed, setIsZoomed] = useState(false);
   const [openAccordion, setOpenAccordion] = useState<string | null>('description');
   const { addItem } = useCart();
 
-  useEffect(() => {
-    const p = getProductById(resolvedParams.id);
-    if (p) setProduct(p);
-  }, [resolvedParams.id]);
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-terracotta" />
+      </div>
+    );
+  }
 
-  if (!product) {
+  // Not found state
+  if (error || !product) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -44,21 +59,39 @@ export default function ProductPage({ params }: ProductPageProps) {
     );
   }
 
+  // Get images array
+  const productImages = product.images?.map(i => i.image_url) || ['https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800'];
+  const categoryName = product.category?.name || 'Uncategorized';
+
   const handleAddToCart = () => {
-    addItem(product, quantity);
+    // Convert to cart format
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      originalPrice: product.original_price || undefined,
+      images: productImages,
+      category: categoryName,
+      description: product.description || '',
+      rating: product.rating,
+      reviewsCount: product.reviews_count,
+      stock: product.stock,
+      tags: product.tags?.map(t => t.name) || [],
+    }, quantity);
     setQuantity(1);
   };
 
   const nextImage = () => {
-    setSelectedImage((prev) => (prev + 1) % product.images.length);
+    setSelectedImage((prev) => (prev + 1) % productImages.length);
   };
 
   const prevImage = () => {
-    setSelectedImage((prev) => (prev - 1 + product.images.length) % product.images.length);
+    setSelectedImage((prev) => (prev - 1 + productImages.length) % productImages.length);
   };
 
-  const relatedProducts = products.filter(
-    p => p.category === product.category && p.id !== product.id
+  // Get related products from same category
+  const relatedProducts = allProducts.filter(
+    p => p.category?.name === categoryName && p.id !== product.id
   ).slice(0, 4);
 
   return (
@@ -71,7 +104,7 @@ export default function ProductPage({ params }: ProductPageProps) {
             <li>/</li>
             <li><Link href="/products" className="hover:text-terracotta">Shop</Link></li>
             <li>/</li>
-            <li><Link href={`/products?category=${product.category}`} className="hover:text-terracotta">{product.category}</Link></li>
+            <li><Link href={`/products?category=${categoryName}`} className="hover:text-terracotta">{categoryName}</Link></li>
             <li>/</li>
             <li className="text-text-dark">{product.name}</li>
           </ol>
@@ -98,7 +131,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                   className="absolute inset-0"
                 >
                   <Image
-                    src={product.images[selectedImage]}
+                    src={productImages[selectedImage]}
                     alt={product.name}
                     fill
                     className="object-cover"
@@ -115,7 +148,7 @@ export default function ProductPage({ params }: ProductPageProps) {
               />
 
               {/* Navigation arrows */}
-              {product.images.length > 1 && (
+              {productImages.length > 1 && (
                 <>
                   <button
                     onClick={(e) => { e.stopPropagation(); prevImage(); }}
@@ -136,29 +169,29 @@ export default function ProductPage({ params }: ProductPageProps) {
 
               {/* Tags */}
               <div className="absolute top-4 left-4 flex flex-col gap-2 z-20 pointer-events-none">
-                {product.tags.map((tag) => (
+                {(product.tags || []).map((tag) => (
                   <span
-                    key={tag}
+                    key={tag.id}
                     className={`px-3 py-1 text-xs font-medium rounded-full ${
-                      tag === 'best-seller' ? 'bg-terracotta text-cream' :
-                      tag === 'limited-edition' ? 'bg-gold text-text-dark' :
-                      tag === 'new' ? 'bg-sage text-cream' :
+                      tag.name === 'best-seller' ? 'bg-terracotta text-cream' :
+                      tag.name === 'limited-edition' ? 'bg-gold text-text-dark' :
+                      tag.name === 'new' ? 'bg-sage text-cream' :
                       'bg-clay text-cream'
                     }`}
                   >
-                    {tag.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                    {tag.name.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                   </span>
                 ))}
               </div>
             </motion.div>
 
             {/* Thumbnails */}
-            {product.images.length > 1 && (
+            {productImages.length > 1 && (
               <motion.div 
                 className="flex gap-3"
                 variants={fadeInUp}
               >
-                {product.images.map((image, index) => (
+                {productImages.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
@@ -188,7 +221,7 @@ export default function ProductPage({ params }: ProductPageProps) {
               className="text-sm uppercase tracking-wider text-text-muted mb-2"
               variants={fadeInUp}
             >
-              {product.category}
+              {categoryName}
             </motion.p>
 
             <motion.h1 
@@ -205,13 +238,13 @@ export default function ProductPage({ params }: ProductPageProps) {
               <span className="text-3xl font-serif font-bold text-terracotta">
                 {formatPrice(product.price)}
               </span>
-              {product.originalPrice && (
+              {product.original_price && (
                 <>
                   <span className="text-xl text-text-light line-through">
-                    {formatPrice(product.originalPrice)}
+                    {formatPrice(product.original_price)}
                   </span>
                   <span className="px-2 py-1 bg-terracotta/10 text-terracotta text-sm font-medium rounded">
-                    Save {Math.round((1 - product.price / product.originalPrice) * 100)}%
+                    Save {Math.round((1 - product.price / product.original_price) * 100)}%
                   </span>
                 </>
               )}
@@ -394,29 +427,32 @@ export default function ProductPage({ params }: ProductPageProps) {
           <section className="mt-20">
             <h2 className="heading-md text-text-dark mb-8 text-center">You May Also Like</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {relatedProducts.map((p) => (
-                <Link key={p.id} href={`/products/${p.id}`}>
-                  <motion.div
-                    className="group bg-cream rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow"
-                    whileHover={{ y: -4 }}
-                  >
-                    <div className="relative aspect-square overflow-hidden bg-sand">
-                      <Image
-                        src={p.images[0]}
-                        alt={p.name}
-                        fill
-                        className="object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-serif font-medium text-text-dark group-hover:text-terracotta transition-colors">
-                        {p.name}
-                      </h3>
-                      <p className="text-terracotta font-semibold">{formatPrice(p.price)}</p>
-                    </div>
-                  </motion.div>
-                </Link>
-              ))}
+              {relatedProducts.map((p) => {
+                const imageUrl = p.images?.[0]?.image_url || 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=400';
+                return (
+                  <Link key={p.id} href={`/products/${p.slug || p.id}`}>
+                    <motion.div
+                      className="group bg-cream rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow"
+                      whileHover={{ y: -4 }}
+                    >
+                      <div className="relative aspect-square overflow-hidden bg-sand">
+                        <Image
+                          src={imageUrl}
+                          alt={p.name}
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-serif font-medium text-text-dark group-hover:text-terracotta transition-colors">
+                          {p.name}
+                        </h3>
+                        <p className="text-terracotta font-semibold">{formatPrice(p.price)}</p>
+                      </div>
+                    </motion.div>
+                  </Link>
+                );
+              })}
             </div>
           </section>
         )}

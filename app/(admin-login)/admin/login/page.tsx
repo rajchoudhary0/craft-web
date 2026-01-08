@@ -5,12 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, ArrowLeft, Sparkles } from 'lucide-react';
+import { useAdmin } from '@/lib/admin-context';
 
-// Demo credentials
-const DEMO_USERS = [
-  { email: 'admin@thevybestore.com', password: 'admin123', name: 'Neha Kumari', role: 'admin' as const },
-  { email: 'editor@thevybestore.com', password: 'editor123', name: 'Editor', role: 'editor' as const },
-];
+
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -19,31 +16,21 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const { login } = useAdmin();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800));
+    const { error: loginError } = await login(email, password);
 
-    const matchedUser = DEMO_USERS.find(
-      u => u.email === email && u.password === password
-    );
-
-    if (matchedUser) {
-      const userData = {
-        email: matchedUser.email,
-        name: matchedUser.name,
-        role: matchedUser.role,
-      };
-      localStorage.setItem('adminUser', JSON.stringify(userData));
-      router.push('/admin');
+    if (loginError) {
+      setError(loginError);
+      setIsLoading(false);
     } else {
-      setError('Invalid email or password');
+      router.push('/admin');
     }
-    setIsLoading(false);
   };
 
   return (
