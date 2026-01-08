@@ -21,59 +21,55 @@ const formatPrice = (price: number) => {
 };
 
 export default function ProductsPage() {
-  const { 
-    products, 
-    isLoading, 
-    error,
-    filters,
-    setFilter,
-    paginatedProducts,
-    currentPage,
-    pageCount,
-    setPage
-  } = useProducts();
-  
   const { categories } = useCategories();
   const [showFilters, setShowFilters] = useState(false);
-  const [activeSort, setActiveSort] = useState('newest');
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [sortBy, setSortBy] = useState('newest');
+  
+  // Parse sort option to hook options
+  const hookOptions = useMemo(() => {
+    const opts: any = {};
+    if (activeCategory !== 'All') {
+      const category = categories.find(c => c.name === activeCategory);
+      if (category) opts.categorySlug = category.slug;
+    }
+    
+    // Sort is handled client-side for now in this simple hook, 
+    // or we need to update hook to support detailed sorting.
+    // For now, let's fetch all (or filtered by category) and sort client-side 
+    // to match previous behavior if hook doesn't support generic sort.
+    return opts;
+  }, [activeCategory, categories]);
+
+  const { products, isLoading, error } = useProducts(hookOptions);
 
   // All categories including "All"
   const allCategories = useMemo(() => {
     return ['All', ...categories.map(c => c.name)];
   }, [categories]);
 
-  // Filter and sort products
-  const filteredProducts = useMemo(() => {
-    let filtered = activeCategory === 'All' 
-      ? [...products] 
-      : products.filter(p => p.category?.name === activeCategory);
-
+  // Client-side sorting (since hook does basic filtering)
+  const sortedProducts = useMemo(() => {
+    const sorted = [...products];
     switch (sortBy) {
       case 'price-low':
-        filtered.sort((a, b) => a.price - b.price);
-        break;
+        return sorted.sort((a, b) => a.price - b.price);
       case 'price-high':
-        filtered.sort((a, b) => b.price - a.price);
-        break;
+        return sorted.sort((a, b) => b.price - a.price);
       case 'name':
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-        break;
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
       case 'newest':
-        filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        break;
+        return sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       case 'featured':
       default:
         // Featured first, then by date
-        filtered.sort((a, b) => {
+        return sorted.sort((a, b) => {
           if (a.is_featured && !b.is_featured) return -1;
           if (!a.is_featured && b.is_featured) return 1;
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         });
-        break;
     }
-
-    return filtered;
-  }, [products, activeCategory, sortBy]);
+  }, [products, sortBy]);
 
   return (
     <div className="min-h-screen pt-24 pb-20 bg-gray-50">
@@ -117,9 +113,9 @@ export default function ProductsPage() {
             </div>
 
             {/* Right Side Controls */}
-            <div className="flex items-center gap-3 ml-auto pl-4 border-l border-gray-200">
+              <div className="flex items-center gap-3 ml-auto pl-4 border-l border-gray-200">
               <span className="text-sm font-medium text-gray-500 whitespace-nowrap">
-                {filteredProducts.length} items
+                {sortedProducts.length} items
               </span>
               
               <div className="relative group">
@@ -174,7 +170,7 @@ export default function ProductsPage() {
             variants={staggerContainer}
           >
             <AnimatePresence mode="popLayout">
-              {filteredProducts.map((product) => (
+            {sortedProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </AnimatePresence>
@@ -182,7 +178,7 @@ export default function ProductsPage() {
         )}
 
         {/* Empty State */}
-        {!isLoading && !error && filteredProducts.length === 0 && (
+        {!isLoading && !error && sortedProducts.length === 0 && (
           <div className="text-center py-20">
             <p className="text-gray-400 text-lg">No products found in this category.</p>
           </div>
@@ -267,7 +263,7 @@ export default function ProductsPage() {
                   onClick={() => setIsFilterOpen(false)}
                   className="w-full py-3 bg-terracotta text-white rounded-full font-medium"
                 >
-                  Show {filteredProducts.length} Results
+                  Show {sortedProducts.length} Results
                 </button>
               </div>
             </motion.div>
