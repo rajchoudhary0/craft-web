@@ -307,7 +307,7 @@ export default function AdminSettingsPage() {
               Save Changes
             </>
           )}
-        </motion.button>
+        </button>
       </div>
     </div>
   );

@@ -286,17 +286,90 @@ export default function AccountPage() {
                   exit={{ opacity: 0, y: -10 }}
                   className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-clay/10"
                 >
-                  <h3 className="font-serif text-2xl font-medium text-text-dark mb-6">Saved Addresses</h3>
-                  
-                  <div className="text-center py-16">
-                    <div className="w-16 h-16 bg-sand/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <MapPin className="w-8 h-8 text-text-muted" />
-                    </div>
-                    <h4 className="font-serif text-xl font-medium text-text-dark mb-2">No saved addresses</h4>
-                    <p className="text-text-muted max-w-sm mx-auto mb-6">
-                      Your shipping addresses will appear here after your first order.
-                    </p>
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="font-serif text-2xl font-medium text-text-dark">Saved Addresses</h3>
                   </div>
+                  
+                  {/* Add New Address Form */}
+                  <div className="bg-sand/30 rounded-2xl p-6 mb-6">
+                    <h4 className="font-medium text-text-dark mb-4">Add New Address</h4>
+                    <form className="space-y-4">
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">Full Name</label>
+                          <input
+                            type="text"
+                            className="w-full px-4 py-2.5 bg-white border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta"
+                            placeholder="John Doe"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">Phone</label>
+                          <input
+                            type="tel"
+                            className="w-full px-4 py-2.5 bg-white border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta"
+                            placeholder="+91 9876543210"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-text-dark mb-1">Address Line 1</label>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2.5 bg-white border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta"
+                          placeholder="House/Flat No., Building Name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-text-dark mb-1">Address Line 2</label>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2.5 bg-white border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta"
+                          placeholder="Street, Locality"
+                        />
+                      </div>
+                      <div className="grid sm:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">City</label>
+                          <input
+                            type="text"
+                            className="w-full px-4 py-2.5 bg-white border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta"
+                            placeholder="Mumbai"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">State</label>
+                          <input
+                            type="text"
+                            className="w-full px-4 py-2.5 bg-white border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta"
+                            placeholder="Maharashtra"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">PIN Code</label>
+                          <input
+                            type="text"
+                            className="w-full px-4 py-2.5 bg-white border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta"
+                            placeholder="400001"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" id="default-address" className="w-4 h-4 accent-terracotta" />
+                        <label htmlFor="default-address" className="text-sm text-text-muted">Set as default address</label>
+                      </div>
+                      <button
+                        type="submit"
+                        className="px-6 py-3 bg-terracotta text-cream rounded-xl font-medium hover:bg-terracotta-dark transition-colors"
+                      >
+                        Save Address
+                      </button>
+                    </form>
+                  </div>
+                  
+                  <p className="text-sm text-text-muted text-center">
+                    Saved addresses will appear here for quick checkout
+                  </p>
                 </motion.div>
               )}
 

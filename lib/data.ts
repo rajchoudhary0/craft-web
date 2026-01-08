@@ -280,10 +280,13 @@ export function getNewArrivals(): Product[] {
   return products.filter(p => p.tags.includes('new'));
 }
 
-// Helper function to format price
+// Helper function to format price in INR
 export function formatPrice(price: number): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-IN', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'INR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(price);
 }
+

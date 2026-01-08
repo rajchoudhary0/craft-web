@@ -71,12 +71,12 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3 px-4 py-3 bg-cream rounded-xl mb-3">
             <div className="w-10 h-10 rounded-full bg-terracotta/20 flex items-center justify-center">
               <span className="text-terracotta font-display font-medium">
-                {user?.name.charAt(0)}
+                {(user?.email || 'A').charAt(0).toUpperCase()}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-text-dark text-sm truncate">{user?.name}</p>
-              <p className="text-xs text-text-muted capitalize">{user?.role}</p>
+              <p className="font-medium text-text-dark text-sm truncate">{user?.email?.split('@')[0] || 'Admin'}</p>
+              <p className="text-xs text-text-muted capitalize">{user?.role || 'Admin'}</p>
             </div>
           </div>
           

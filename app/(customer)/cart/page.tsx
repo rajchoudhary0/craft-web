@@ -83,7 +83,7 @@ export default function CartPage() {
                   <Link href={`/products/${item.product.id}`} className="flex-shrink-0">
                     <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-xl overflow-hidden bg-sand">
                       <Image
-                        src={item.product.images[0]}
+                        src={item.product.images?.[0] || 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=200'}
                         alt={item.product.name}
                         fill
                         className="object-cover hover:scale-110 transition-transform duration-300"

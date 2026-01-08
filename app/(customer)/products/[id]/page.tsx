@@ -306,7 +306,7 @@ export default function ProductPage({ params }: ProductPageProps) {
               variants={fadeInUp}
             >
               {[
-                { icon: Truck, text: 'Free Shipping' },
+                { icon: Truck, text: 'Delivery: 7-15 Days' },
                 { icon: Shield, text: 'Secure Payment' },
                 { icon: RefreshCw, text: '30-Day Returns' },
               ].map((item, index) => (
@@ -372,11 +372,11 @@ export default function ProductPage({ params }: ProductPageProps) {
                       <div className="px-4 pb-4 text-text-muted">
                         <p className="mb-2"><strong>Materials:</strong></p>
                         <ul className="list-disc list-inside mb-4">
-                          {product.materials.map((m, i) => (
+                          {(product.materials || ['Handcrafted materials', 'Artisan quality']).map((m, i) => (
                             <li key={i}>{m}</li>
                           ))}
                         </ul>
-                        <p><strong>Dimensions:</strong> {product.dimensions}</p>
+                        <p><strong>Dimensions:</strong> {product.dimensions || 'Contact for details'}</p>
                       </div>
                     </motion.div>
                   )}
@@ -406,7 +406,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                     >
                       <div className="px-4 pb-4 text-text-muted">
                         <ul className="space-y-2">
-                          {product.careInstructions.map((instruction, i) => (
+                          {(product.careInstructions || ['Handle with care', 'Clean with dry cloth', 'Keep away from moisture']).map((instruction, i) => (
                             <li key={i} className="flex items-start gap-2">
                               <Check className="w-4 h-4 text-sage flex-shrink-0 mt-0.5" />
                               {instruction}

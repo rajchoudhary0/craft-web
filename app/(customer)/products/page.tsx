@@ -9,6 +9,7 @@ import { useProducts, useCategories, ProductWithDetails } from '@/lib/hooks/use-
 import { useCart } from '@/lib/cart-context';
 import { useWishlist } from '@/lib/wishlist-context';
 import { staggerContainer, fadeInUp } from '@/lib/animations';
+import ProductCard from '@/components/ui/ProductCard';
 
 // Format price in INR
 const formatPrice = (price: number) => {
@@ -19,183 +20,22 @@ const formatPrice = (price: number) => {
   }).format(price);
 };
 
-// Product Card Component
-function ProductCard({ product }: { product: ProductWithDetails }) {
-  const { addItem } = useCart();
-  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
-  const [isHovered, setIsHovered] = useState(false);
-  const inWishlist = isInWishlist(product.id);
-
-  // Get first image or fallback
-  const imageUrl = product.images?.[0]?.image_url || 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800';
-
-  // Get first tag name
-  const tagName = product.tags?.[0]?.name;
-
-  const handleWishlistToggle = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (inWishlist) {
-      removeFromWishlist(product.id);
-    } else {
-      // Convert to wishlist format
-      addToWishlist({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        originalPrice: product.original_price || undefined,
-        images: product.images?.map(i => i.image_url) || [],
-        category: product.category?.name || '',
-        description: product.description || '',
-        rating: product.rating,
-        reviewsCount: product.reviews_count,
-        stock: product.stock,
-        tags: product.tags?.map(t => t.name) || [],
-      });
-    }
-  };
-
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // Convert to cart format
-    addItem({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      originalPrice: product.original_price || undefined,
-      images: product.images?.map(i => i.image_url) || [],
-      category: product.category?.name || '',
-      description: product.description || '',
-      rating: product.rating,
-      reviewsCount: product.reviews_count,
-      stock: product.stock,
-      tags: product.tags?.map(t => t.name) || [],
-    });
-  };
-
-  const getTagStyle = (tag: string) => {
-    switch (tag) {
-      case 'best-seller': return 'bg-terracotta text-white';
-      case 'limited-edition': return 'bg-gold text-text-dark';
-      case 'new': return 'bg-sage text-white';
-      default: return 'bg-clay/80 text-white';
-    }
-  };
-
-  return (
-    <motion.article
-      className="group h-full"
-      variants={fadeInUp}
-      layout
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div className="h-full bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-300 flex flex-col">
-        
-        {/* Image Container */}
-        <div className="relative aspect-[4/5] overflow-hidden bg-gray-50">
-          <Link href={`/products/${product.slug || product.id}`} className="block w-full h-full">
-            <Image
-              src={imageUrl}
-              alt={product.name}
-              fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          </Link>
-            
-          {/* Tag Badge */}
-          {tagName && (
-            <span className={`absolute top-3 left-3 inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full ${getTagStyle(tagName)}`}>
-              {tagName === 'best-seller' && <Sparkles className="w-3 h-3" />}
-              {tagName.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
-            </span>
-          )}
-
-          {/* Featured Badge */}
-          {product.is_featured && !tagName && (
-            <span className="absolute top-3 left-3 inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full bg-terracotta text-white">
-              <Sparkles className="w-3 h-3" /> Featured
-            </span>
-          )}
-
-          {/* Wishlist Button */}
-          <button
-            onClick={handleWishlistToggle}
-            className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-sm ${
-              inWishlist 
-                ? 'bg-terracotta text-white' 
-                : 'bg-white text-gray-600 hover:bg-terracotta hover:text-white'
-            }`}
-          >
-            <Heart className={`w-4 h-4 ${inWishlist ? 'fill-current' : ''}`} />
-          </button>
-
-          {/* Hover Actions */}
-          <AnimatePresence>
-            {isHovered && (
-              <motion.div
-                className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/50 to-transparent"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleAddToCart}
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-white text-gray-900 rounded-full font-medium text-sm hover:bg-terracotta hover:text-white transition-colors"
-                  >
-                    <ShoppingBag className="w-4 h-4" />
-                    Add to Cart
-                  </button>
-                  <Link 
-                    href={`/products/${product.slug || product.id}`}
-                    className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-gray-600 hover:bg-terracotta hover:text-white transition-colors"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </Link>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Product Info */}
-        <div className="p-4 flex-1 flex flex-col">
-          <p className="text-[11px] uppercase tracking-widest text-gray-400 mb-1">
-            {product.category?.name || 'Uncategorized'}
-          </p>
-          <Link href={`/products/${product.slug || product.id}`} className="block flex-1">
-            <h3 className="font-serif text-base font-semibold text-gray-900 leading-tight mb-2 group-hover:text-terracotta transition-colors line-clamp-2">
-              {product.name}
-            </h3>
-          </Link>
-          <div className="flex items-baseline gap-2 mt-auto">
-            <span className="text-lg font-bold text-terracotta">
-              {formatPrice(product.price)}
-            </span>
-            {product.original_price && (
-              <span className="text-sm text-gray-400 line-through">
-                {formatPrice(product.original_price)}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-    </motion.article>
-  );
-}
-
 export default function ProductsPage() {
-  const [activeCategory, setActiveCategory] = useState('All');
-  const [sortBy, setSortBy] = useState('featured');
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const { 
+    products, 
+    isLoading, 
+    error,
+    filters,
+    setFilter,
+    paginatedProducts,
+    currentPage,
+    pageCount,
+    setPage
+  } = useProducts();
   
-  // Fetch from Supabase
-  const { products, isLoading, error } = useProducts();
   const { categories } = useCategories();
+  const [showFilters, setShowFilters] = useState(false);
+  const [activeSort, setActiveSort] = useState('newest');
 
   // All categories including "All"
   const allCategories = useMemo(() => {

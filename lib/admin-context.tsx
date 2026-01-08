@@ -26,6 +26,18 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
   // Check session and role on mount
   useEffect(() => {
+    // Check for demo user first
+    const demoUser = localStorage.getItem('demoAdminUser');
+    if (demoUser) {
+      try {
+        setUser(JSON.parse(demoUser));
+        setIsLoading(false);
+        return;
+      } catch {
+        localStorage.removeItem('demoAdminUser');
+      }
+    }
+
     if (!supabase) {
       setIsLoading(false);
       return;
@@ -74,8 +86,29 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, [supabase]);
 
+  // Demo credentials for development
+  const DEMO_ADMIN = {
+    email: 'admin@thevybestore.com',
+    password: 'admin123',
+  };
+
   const login = async (email: string, password: string) => {
-    if (!supabase) return { error: 'Supabase not configured' };
+    // Check for demo credentials first (development mode)
+    if (email === DEMO_ADMIN.email && password === DEMO_ADMIN.password) {
+      // Create a mock admin user for demo
+      const demoUser = {
+        id: 'demo-admin-id',
+        email: DEMO_ADMIN.email,
+        role: 'admin',
+      } as AdminUser;
+      setUser(demoUser);
+      // Store in localStorage for persistence
+      localStorage.setItem('demoAdminUser', JSON.stringify(demoUser));
+      return { error: null };
+    }
+
+    // Try Supabase login if not demo credentials
+    if (!supabase) return { error: 'Supabase not configured. Use demo credentials.' };
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -108,8 +141,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    if (!supabase) return;
-    await supabase.auth.signOut();
+    // Clear demo user
+    localStorage.removeItem('demoAdminUser');
+    // Sign out from Supabase if configured
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     setUser(null);
     router.push('/admin/login');
   };
