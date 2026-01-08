@@ -21,6 +21,13 @@ interface CartContextType {
   openCart: () => void;
   closeCart: () => void;
   toggleCart: () => void;
+  discount: { code: string; value: number; type: 'percentage' | 'fixed' } | null;
+  giftCard: { code: string; balance: number; appliedAmount: number } | null;
+  finalPrice: number;
+  applyCoupon: (code: string) => Promise<{ success: boolean; message: string }>;
+  removeCoupon: () => void;
+  applyGiftCard: (code: string) => Promise<{ success: boolean; message: string }>;
+  removeGiftCard: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -267,11 +274,67 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [debouncedSync]
   );
 
+  const [discount, setDiscount] = useState<{
+    code: string;
+    value: number;
+    type: 'percentage' | 'fixed';
+  } | null>(null);
+
+  // ... (existing useEffects)
+
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0
   );
+
+
+
+  const [giftCard, setGiftCard] = useState<{
+    code: string;
+    balance: number;
+    appliedAmount: number;
+  } | null>(null);
+
+  const applyGiftCard = async (code: string): Promise<{ success: boolean; message: string }> => {
+    if (!code) return { success: false, message: 'Please enter a code' };
+    
+    // Call Supabase RPC to validate
+    const { data, error } = await supabase.rpc('validate_gift_card', { 
+      code_input: code.toUpperCase()
+    });
+
+    if (error) {
+      console.error('Gift card error:', error);
+      return { success: false, message: 'Error validating gift card' };
+    }
+
+    if (!data.valid) {
+      return { success: false, message: data.message };
+    }
+
+    setGiftCard({
+      code: data.code,
+      balance: data.balance,
+      appliedAmount: 0 // Will recalculate
+    });
+
+    return { success: true, message: `Gift card applied! Balance: ₹${data.balance}` };
+  };
+
+  const removeGiftCard = () => setGiftCard(null);
+
+  const priceAfterDiscount = discount 
+    ? discount.type === 'percentage'
+      ? totalPrice * (1 - discount.value / 100)
+      : Math.max(0, totalPrice - discount.value)
+    : totalPrice;
+
+  const giftCardAmount = giftCard 
+    ? Math.min(priceAfterDiscount, giftCard.balance) 
+    : 0;
+
+  const finalPrice = Math.max(0, priceAfterDiscount - giftCardAmount);
 
   const addItem = (product: Product, quantity = 1) => {
     const newItems = [...items];
@@ -314,6 +377,35 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const closeCart = () => setIsOpen(false);
   const toggleCart = () => setIsOpen((prev) => !prev);
 
+  const applyCoupon = async (code: string): Promise<{ success: boolean; message: string }> => {
+    if (!code) return { success: false, message: 'Please enter a code' };
+    
+    // Call Supabase RPC to validate
+    const { data, error } = await supabase.rpc('validate_coupon', { 
+      coupon_code: code.toUpperCase(),
+      order_amount: totalPrice
+    });
+
+    if (error) {
+      console.error('Coupon validation error:', error);
+      return { success: false, message: 'Error validating coupon' };
+    }
+
+    if (!data.valid) {
+      return { success: false, message: data.message };
+    }
+
+    setDiscount({
+      code: data.code,
+      value: data.value,
+      type: data.type
+    });
+
+    return { success: true, message: 'Coupon applied successfully!' };
+  };
+
+  const removeCoupon = () => setDiscount(null);
+
   return (
     <CartContext.Provider
       value={{
@@ -322,6 +414,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         isLoading,
         totalItems,
         totalPrice,
+        finalPrice,
+        discount,
+        giftCard,
         addItem,
         removeItem,
         updateQuantity,
@@ -329,6 +424,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         openCart,
         closeCart,
         toggleCart,
+        applyCoupon,
+        removeCoupon,
+        applyGiftCard,
+        removeGiftCard
       }}
     >
       {children}

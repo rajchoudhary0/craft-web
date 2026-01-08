@@ -51,6 +51,7 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsReturn
           images:product_images(*)
         `)
         .eq('is_active', true)
+        .neq('type', 'gift_card') // Exclude gift cards from general listings
         .order('created_at', { ascending: false });
 
       // Apply filters

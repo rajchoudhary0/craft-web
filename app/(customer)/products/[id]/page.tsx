@@ -131,7 +131,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                   className="absolute inset-0"
                 >
                   <Image
-                    src={productImages[selectedImage]}
+                    src={productImages[selectedImage] || 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800'}
                     alt={product.name}
                     fill
                     className="object-cover"

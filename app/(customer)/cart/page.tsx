@@ -3,14 +3,49 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ArrowLeft, Tag } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ArrowLeft, Tag, Gift } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { formatPrice } from '@/lib/data';
 import { staggerContainer, fadeInUp } from '@/lib/animations';
 import Button from '@/components/ui/Button';
 
+import { useState } from 'react';
+
 export default function CartPage() {
-  const { items, totalItems, totalPrice, updateQuantity, removeItem, clearCart } = useCart();
+  const { items, totalItems, totalPrice, updateQuantity, removeItem, clearCart, applyCoupon, removeCoupon, discount, finalPrice, giftCard, applyGiftCard, removeGiftCard } = useCart();
+
+  // Unified Code Handler
+  const [code, setCode] = useState('');
+  const [msg, setMsg] = useState('');
+  const [isApplying, setIsApplying] = useState(false);
+
+  const handleApplyCode = async () => {
+    if (!code) return;
+    setIsApplying(true);
+    setMsg('');
+
+    // 1. Try Coupon First
+    const couponRes = await applyCoupon(code);
+    if (couponRes.success) {
+      setMsg(couponRes.message);
+      setCode('');
+      setIsApplying(false);
+      return;
+    }
+
+    // 2. Try Gift Card if Coupon Failed
+    // (Only if error wasn't "already applied" etc, but simpler to just try)
+    const giftRes = await applyGiftCard(code);
+    if (giftRes.success) {
+      setMsg(giftRes.message);
+      setCode('');
+    } else {
+      // Both failed
+      setMsg('Invalid coupon or gift card code');
+    }
+    
+    setIsApplying(false);
+  };
 
   if (items.length === 0) {
     return (
@@ -188,18 +223,81 @@ export default function CartPage() {
               </h2>
 
               {/* Promo Code */}
+              {/* Unified Promo & Gift Card Input */}
               <div className="mb-6">
-                <label className="block text-sm text-text-muted mb-2">Promo Code</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Enter code"
-                    className="flex-1 px-4 py-2.5 rounded-lg bg-sand border-transparent text-text-dark placeholder:text-text-light focus:outline-none focus:border-terracotta transition-colors"
-                  />
-                  <Button variant="outline" size="sm">
-                    Apply
-                  </Button>
+                <label className="block text-sm text-text-muted mb-2">Promo or Gift Code</label>
+                
+                {/* Active Applied Codes List */}
+                <div className="space-y-2 mb-3">
+                  {discount && (
+                    <div className="flex items-center justify-between p-3 bg-green-50 text-green-700 rounded-lg border border-green-100">
+                      <div className="flex items-center gap-2">
+                        <Tag className="w-4 h-4" />
+                        <div>
+                          <span className="font-medium block">{discount.code}</span>
+                          <span className="text-xs opacity-80">
+                             {discount.type === 'percentage' ? `${discount.value}% OFF` : `₹${discount.value} OFF`}
+                          </span>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={removeCoupon}
+                        className="text-xs hover:underline text-green-800 font-medium"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+
+                  {giftCard && (
+                    <div className="flex items-center justify-between p-3 bg-blue-50 text-blue-700 rounded-lg border border-blue-100">
+                      <div className="flex items-center gap-2">
+                        <Gift className="w-4 h-4" />
+                        <div>
+                          <span className="font-medium block">{giftCard.code}</span>
+                          <span className="text-xs opacity-80">
+                            Balance: {formatPrice(giftCard.balance)}
+                          </span>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={removeGiftCard}
+                        className="text-xs hover:underline text-blue-800 font-medium"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
                 </div>
+
+                {/* Input Field */}
+                {(!discount || !giftCard) && (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Enter code"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleApplyCode()}
+                      disabled={isApplying}
+                      className="flex-1 px-4 py-2.5 rounded-lg bg-sand border-transparent text-text-dark placeholder:text-text-light focus:outline-none focus:border-terracotta transition-colors uppercase"
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleApplyCode}
+                      disabled={isApplying || !code}
+                    >
+                      {isApplying ? '...' : 'Apply'}
+                    </Button>
+                  </div>
+                )}
+                
+                {msg && (
+                   <p className={`text-xs mt-2 ${msg.toLowerCase().includes('success') || msg.includes('applied') ? 'text-green-600' : 'text-red-500'}`}>
+                     {msg}
+                   </p>
+                )}
               </div>
 
               <div className="space-y-3 mb-6 pb-6 border-b border-clay/20">
@@ -207,6 +305,18 @@ export default function CartPage() {
                   <span>Subtotal</span>
                   <span>{formatPrice(totalPrice)}</span>
                 </div>
+                {discount && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Discount</span>
+                    <span>-{formatPrice(items.reduce((sum, item) => sum + item.product.price * item.quantity, 0) - (giftCard ? finalPrice + Math.min(items.reduce((sum, item) => sum + item.product.price * item.quantity, 0), giftCard.balance) : finalPrice))}</span>
+                  </div>
+                )}
+                {giftCard && (
+                  <div className="flex justify-between text-blue-600">
+                    <span>Gift Card</span>
+                    <span>-{formatPrice(Math.min(finalPrice + (giftCard.balance), giftCard.balance))}</span> 
+                  </div>
+                )}
                 <div className="flex justify-between text-text-muted">
                   <span>Shipping</span>
                   <span className="text-sage">Free</span>
@@ -219,7 +329,7 @@ export default function CartPage() {
 
               <div className="flex justify-between text-lg font-semibold text-text-dark mb-6">
                 <span>Total</span>
-                <span className="text-terracotta">{formatPrice(totalPrice)}</span>
+                <span className="text-terracotta">{formatPrice(finalPrice)}</span>
               </div>
 
               <Button 
@@ -227,6 +337,7 @@ export default function CartPage() {
                 size="lg" 
                 className="w-full mb-4"
                 rightIcon={<ArrowRight className="w-5 h-5" />}
+                onClick={() => alert(`Proceeding to checkout with total: ${formatPrice(finalPrice)}`)}
               >
                 Checkout
               </Button>

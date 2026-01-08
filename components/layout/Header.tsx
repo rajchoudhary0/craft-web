@@ -13,6 +13,7 @@ import { products } from '@/lib/data';
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/products', label: 'Shop' },
+  { href: '/gift-cards', label: 'Gift Cards' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
 ];

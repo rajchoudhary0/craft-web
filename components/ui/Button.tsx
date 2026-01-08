@@ -11,6 +11,7 @@ interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'ref'> {
   isLoading?: boolean;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
+  fullWidth?: boolean;
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -24,6 +25,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       rightIcon,
       className = '',
       disabled,
+      fullWidth, // Destructure to prevent passing to DOM
       ...props
     },
     ref
@@ -65,7 +67,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <motion.button
         ref={ref}
-        className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+        className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''} ${className}`}
         variants={buttonHover}
         initial="rest"
         whileHover="hover"
