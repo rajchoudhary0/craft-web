@@ -76,7 +76,7 @@ export default function ProductPage({ params }: ProductPageProps) {
       rating: product.rating,
       reviewsCount: product.reviews_count,
       stock: product.stock,
-      tags: product.tags?.map(t => t.name) || [],
+      tags: (product.tags?.map(t => t.name) || []) as any,
     }, quantity);
     setQuantity(1);
   };
