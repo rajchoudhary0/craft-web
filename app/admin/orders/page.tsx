@@ -65,6 +65,7 @@ export default function AdminOrdersPage() {
   }, []);
 
   const fetchOrders = async () => {
+    if (!supabase) return;
     setIsLoading(true);
     const { data, error } = await supabase
       .from('orders')
@@ -120,6 +121,7 @@ export default function AdminOrdersPage() {
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    if (!supabase) return;
     setIsUpdating(true);
     const { error } = await supabase
       .from('orders')
@@ -137,6 +139,7 @@ export default function AdminOrdersPage() {
 
   const handleBulkStatusUpdate = async (newStatus: string) => {
     if (selectedIds.size === 0) return;
+    if (!supabase) return;
     setIsBulkUpdating(true);
     
     const { error } = await supabase

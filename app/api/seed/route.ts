@@ -16,6 +16,7 @@ export async function POST() {
     const categoryMap: Record<string, string> = {};
 
     for (const catName of uniqueCategories) {
+      if (!catName) continue;
       // Check if category exists
       const { data: existing } = await supabase
         .from('categories')
@@ -45,7 +46,7 @@ export async function POST() {
 
     // Insert products
     for (const p of products) {
-      const categoryId = categoryMap[p.category] || null;
+      const categoryId = p.category ? categoryMap[p.category] : null;
 
       // Insert product
       const { data: product, error: productError } = await supabase
@@ -72,9 +73,9 @@ export async function POST() {
         continue;
       }
 
-      if (product && p.images?.length > 0) {
+      if (product && (p.images?.length ?? 0) > 0) {
         // Insert product images
-        const imagesToInsert = p.images.map((url, idx) => ({
+        const imagesToInsert = p.images!.map((url, idx) => ({
           product_id: product.id,
           image_url: url,
           alt_text: `${p.name} image ${idx + 1}`,
@@ -86,8 +87,8 @@ export async function POST() {
       }
 
       // Insert tags if available
-      if (product && p.tags?.length > 0) {
-        for (const tagName of p.tags) {
+      if (product && (p.tags?.length ?? 0) > 0) {
+        for (const tagName of p.tags!) {
           // Get or create tag
           let tagId: string | null = null;
 

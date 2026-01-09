@@ -46,6 +46,7 @@ export default function AdminCouponsPage() {
   }, []);
 
   const fetchCoupons = async () => {
+    if (!supabase) return;
     setIsLoading(true);
     const { data, error } = await supabase
       .from('coupons')
@@ -66,6 +67,7 @@ export default function AdminCouponsPage() {
     setError(null);
 
     try {
+      if (!supabase) throw new Error('Database not available');
       const { data, error } = await supabase.from('coupons').insert({
         code: formData.code.toUpperCase(),
         discount_type: formData.discount_type,
@@ -97,7 +99,8 @@ export default function AdminCouponsPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this coupon?')) return;
-    
+    if (!supabase) return;
+
     const { error } = await supabase.from('coupons').delete().eq('id', id);
     if (!error) {
       setCoupons(coupons.filter(c => c.id !== id));
@@ -105,6 +108,7 @@ export default function AdminCouponsPage() {
   };
 
   const toggleActive = async (id: string, currentState: boolean) => {
+    if (!supabase) return;
     const { error } = await supabase
       .from('coupons')
       .update({ is_active: !currentState })

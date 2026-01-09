@@ -323,6 +323,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const applyGiftCard = async (code: string): Promise<{ success: boolean; message: string }> => {
     if (!code) return { success: false, message: 'Please enter a code' };
+    if (!supabase) return { success: false, message: 'Database connection unavailable' };
     
     // Call Supabase RPC to validate
     const { data, error } = await supabase.rpc('validate_gift_card', { 
@@ -366,7 +367,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const priceAfterDiscount = Math.max(0, totalPrice - discountAmount);
 
   // Expose info for UI if partial application happened
-  const isPartialDiscount = discount && giftCardsTotal > 0;
+  const isPartialDiscount = discount ? giftCardsTotal > 0 : undefined;
 
   const giftCardAmount = giftCard 
     ? Math.min(priceAfterDiscount, giftCard.balance) 
@@ -417,6 +418,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const applyCoupon = async (code: string): Promise<{ success: boolean; message: string }> => {
     if (!code) return { success: false, message: 'Please enter a code' };
+    if (!supabase) return { success: false, message: 'Database connection unavailable' };
     
     // Call Supabase RPC to validate
     const { data, error } = await supabase.rpc('validate_coupon', { 

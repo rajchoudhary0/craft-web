@@ -54,7 +54,7 @@ export default function Header() {
   const searchResults = searchQuery.length > 1 
     ? products.filter(p => 
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.category.toLowerCase().includes(searchQuery.toLowerCase())
+        (p.category || '').toLowerCase().includes(searchQuery.toLowerCase())
       ).slice(0, 5)
     : [];
 
@@ -304,11 +304,11 @@ export default function Header() {
                           className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-sand transition-colors text-left group"
                         >
                           <div className="w-14 h-14 rounded-lg bg-cream overflow-hidden flex-shrink-0 border border-clay/10">
-                            <img src={product.images[0]} alt="" className="w-full h-full object-cover" />
+                            <img src={product.images?.[0] || 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800'} alt="" className="w-full h-full object-cover" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-text-dark group-hover:text-terracotta transition-colors">{product.name}</p>
-                            <p className="text-sm text-text-muted">{product.category}</p>
+                            <p className="text-sm text-text-muted">{product.category || 'Uncategorized'}</p>
                           </div>
                           <ArrowRight className="w-5 h-5 text-terracotta opacity-0 group-hover:opacity-100 transition-opacity" />
                         </button>

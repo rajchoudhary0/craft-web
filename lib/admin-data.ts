@@ -98,7 +98,7 @@ export function getDashboardStats() {
     .filter(o => o.paymentStatus === 'paid')
     .reduce((sum, o) => sum + o.total, 0);
   const pendingOrders = mockOrders.filter(o => o.status === 'pending').length;
-  const lowStockProducts = products.filter(p => p.quantity < 10).length;
+  const lowStockProducts = products.filter(p => (p.quantity ?? 0) < 10).length;
   const totalProducts = products.length;
 
   return {
@@ -137,7 +137,7 @@ export function getCategoryData() {
 // Best sellers
 export function getBestSellers() {
   return products
-    .filter(p => p.tags.includes('best-seller'))
+    .filter(p => p.tags?.includes('best-seller'))
     .slice(0, 5)
     .map(p => ({ name: p.name, sales: Math.floor(Math.random() * 50) + 20 }));
 }

@@ -52,6 +52,7 @@ export default function AdminDashboard() {
   }, []);
 
   const fetchDashboardData = async () => {
+    if (!supabase) return;
     setIsLoading(true);
 
     // Fetch products count
@@ -70,8 +71,8 @@ export default function AdminDashboard() {
       .from('categories')
       .select('id, name');
 
-    const orders = (ordersData || []) as Order[];
-    const allProducts = (productsData || []) as Product[];
+    const orders = (ordersData || []) as unknown as Order[];
+    const allProducts = (productsData || []) as unknown as Product[];
 
     // Calculate stats
     const revenue = orders.reduce((sum, o) => sum + (o.total_amount || 0), 0);

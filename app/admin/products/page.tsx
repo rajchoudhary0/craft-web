@@ -57,6 +57,7 @@ export default function AdminProductsPage() {
   }, []);
 
   const fetchProducts = async () => {
+    if (!supabase) return;
     setIsLoading(true);
     const { data, error } = await supabase
       .from('products')
@@ -70,12 +71,13 @@ export default function AdminProductsPage() {
       .order('created_at', { ascending: false });
 
     if (data) {
-      setProducts(data as Product[]);
+      setProducts(data as unknown as Product[]);
     }
     setIsLoading(false);
   };
 
   const fetchCategories = async () => {
+    if (!supabase) return;
     const { data } = await supabase.from('categories').select('id, name');
     if (data) setCategories(data);
   };
@@ -131,6 +133,7 @@ export default function AdminProductsPage() {
   };
 
   const handleDelete = async (productId: string) => {
+    if (!supabase) return;
     setIsDeleting(true);
     const { error } = await supabase.from('products').delete().eq('id', productId);
     if (!error) {
@@ -144,6 +147,7 @@ export default function AdminProductsPage() {
 
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
+    if (!supabase) return;
     setIsBulkDeleting(true);
     
     const idsToDelete = Array.from(selectedIds);
@@ -161,6 +165,7 @@ export default function AdminProductsPage() {
 
   const handleBulkToggleActive = async (active: boolean) => {
     if (selectedIds.size === 0) return;
+    if (!supabase) return;
     
     const idsToUpdate = Array.from(selectedIds);
     const { error } = await supabase

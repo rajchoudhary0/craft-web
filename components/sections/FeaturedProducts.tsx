@@ -11,13 +11,13 @@ import { createClient } from '@/lib/supabase/client';
 interface Product {
   id: string;
   name: string;
-  slug: string;
+  slug?: string | null;
   price: number;
-  original_price: number | null;
-  description: string;
-  rating: number;
-  reviews_count: number;
-  stock: number;
+  original_price?: number | null;
+  description?: string | null;
+  rating?: number | null;
+  reviews_count?: number | null;
+  stock?: number | null;
   images: { image_url: string }[];
   category: { name: string } | null;
   tags: { name: string }[];
@@ -30,6 +30,7 @@ export default function FeaturedProducts() {
 
   useEffect(() => {
     async function fetchFeatured() {
+      if (!supabase) return;
       const { data } = await supabase
         .from('products')
         .select(`

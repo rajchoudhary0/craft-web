@@ -62,11 +62,13 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   }, [isNew]);
 
   const fetchCategories = async () => {
+    if (!supabase) return;
     const { data } = await supabase.from('categories').select('id, name');
     if (data) setCategories(data);
   };
 
   const fetchProduct = async () => {
+    if (!supabase) return;
     const { data: product, error } = await supabase
       .from('products')
       .select(`

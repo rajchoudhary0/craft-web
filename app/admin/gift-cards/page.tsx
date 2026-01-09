@@ -40,6 +40,7 @@ export default function AdminGiftCardsPage() {
   }, []);
 
   const fetchCards = async () => {
+    if (!supabase) return;
     setIsLoading(true);
     const { data, error } = await supabase
       .from('gift_cards')
@@ -68,6 +69,7 @@ export default function AdminGiftCardsPage() {
     const code = formData.code_custom || generateCode();
 
     try {
+      if (!supabase) throw new Error('Database not available');
       const { data, error } = await supabase.from('gift_cards').insert({
         code: code,
         initial_value: Number(formData.initial_value),
@@ -94,7 +96,8 @@ export default function AdminGiftCardsPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this gift card?')) return;
-    
+    if (!supabase) return;
+
     const { error } = await supabase.from('gift_cards').delete().eq('id', id);
     if (!error) {
       setCards(cards.filter(c => c.id !== id));

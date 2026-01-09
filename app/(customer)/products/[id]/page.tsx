@@ -341,7 +341,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                       className="overflow-hidden"
                     >
                       <div className="px-4 pb-4 text-text-muted">
-                        {product.story}
+                        {product.description}
                       </div>
                     </motion.div>
                   )}
@@ -372,11 +372,11 @@ export default function ProductPage({ params }: ProductPageProps) {
                       <div className="px-4 pb-4 text-text-muted">
                         <p className="mb-2"><strong>Materials:</strong></p>
                         <ul className="list-disc list-inside mb-4">
-                          {(product.materials || ['Handcrafted materials', 'Artisan quality']).map((m, i) => (
+                          {((product as any).materials || ['Handcrafted materials', 'Artisan quality']).map((m: string, i: number) => (
                             <li key={i}>{m}</li>
                           ))}
                         </ul>
-                        <p><strong>Dimensions:</strong> {product.dimensions || 'Contact for details'}</p>
+                        <p><strong>Dimensions:</strong> {(product as any).dimensions || 'Contact for details'}</p>
                       </div>
                     </motion.div>
                   )}
@@ -406,7 +406,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                     >
                       <div className="px-4 pb-4 text-text-muted">
                         <ul className="space-y-2">
-                          {(product.careInstructions || ['Handle with care', 'Clean with dry cloth', 'Keep away from moisture']).map((instruction, i) => (
+                          {((product as any).careInstructions || ['Handle with care', 'Clean with dry cloth', 'Keep away from moisture']).map((instruction: string, i: number) => (
                             <li key={i} className="flex items-start gap-2">
                               <Check className="w-4 h-4 text-sage flex-shrink-0 mt-0.5" />
                               {instruction}
@@ -476,7 +476,7 @@ export default function ProductPage({ params }: ProductPageProps) {
               onClick={(e) => e.stopPropagation()}
             >
               <Image
-                src={product.images[selectedImage]}
+                src={productImages[selectedImage] || 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800'}
                 alt={product.name}
                 fill
                 className="object-contain"

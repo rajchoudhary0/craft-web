@@ -15,16 +15,17 @@ export interface ProductCardProps {
   product: {
     id: string;
     name: string;
-    slug?: string;
+    slug?: string | null;
     price: number;
     original_price?: number | null;
-    description?: string;
-    rating?: number;
-    reviews_count?: number;
-    stock?: number;
+    description?: string | null;
+    rating?: number | null;
+    reviews_count?: number | null;
+    stock?: number | null;
     images: { image_url: string }[];
     category?: { name: string } | null;
     tags?: { name: string }[];
+    type?: string | null;
   };
 }
 

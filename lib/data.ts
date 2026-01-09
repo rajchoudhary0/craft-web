@@ -2,19 +2,23 @@
 export interface Product {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   price: number;
   originalPrice?: number;
-  images: string[];
-  category: string;
-  tags: ('best-seller' | 'limited-edition' | 'new' | 'handmade')[];
-  materials: string[];
-  dimensions: string;
-  careInstructions: string[];
-  story: string;
-  inStock: boolean;
-  quantity: number;
+  images?: string[];
+  category?: string;
+  tags?: string[];
+  materials?: string[];
+  dimensions?: string;
+  careInstructions?: string[];
+  story?: string;
+  inStock?: boolean;
+  quantity?: number;
   type?: string;
+  rating?: number;
+  reviewsCount?: number;
+  stock?: number;
+  slug?: string;
 }
 
 // Testimonial types
@@ -273,12 +277,12 @@ export function getProductsByCategory(category: string): Product[] {
 
 // Helper function to get featured products
 export function getFeaturedProducts(): Product[] {
-  return products.filter(p => p.tags.includes('best-seller')).slice(0, 4);
+  return products.filter(p => p.tags?.includes('best-seller')).slice(0, 4);
 }
 
 // Helper function to get new arrivals
 export function getNewArrivals(): Product[] {
-  return products.filter(p => p.tags.includes('new'));
+  return products.filter(p => p.tags?.includes('new'));
 }
 
 // Helper function to format price in INR

@@ -111,7 +111,7 @@ export default function WishlistPage() {
                     {/* Image */}
                     <Link href={`/products/${product.id}`} className="block relative aspect-square overflow-hidden">
                       <Image
-                        src={product.images[0]}
+                        src={product.images?.[0] || 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800'}
                         alt={product.name}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-500"

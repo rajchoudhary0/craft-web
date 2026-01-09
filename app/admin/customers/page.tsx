@@ -40,6 +40,7 @@ export default function AdminCustomersPage() {
   }, []);
 
   const fetchCustomers = async () => {
+    if (!supabase) return;
     setIsLoading(true);
 
     // Fetch profiles
