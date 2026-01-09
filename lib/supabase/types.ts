@@ -21,6 +21,8 @@ export interface Database {
           avatar_url: string | null
           role: 'customer' | 'admin'
           created_at: string
+          gender: 'male' | 'female' | 'other' | null
+          date_of_birth: string | null
         }
         Insert: {
           id: string
@@ -30,6 +32,8 @@ export interface Database {
           avatar_url?: string | null
           role?: 'customer' | 'admin'
           created_at?: string
+          gender?: 'male' | 'female' | 'other' | null
+          date_of_birth?: string | null
         }
         Update: {
           full_name?: string | null
@@ -37,6 +41,8 @@ export interface Database {
           phone?: string | null
           avatar_url?: string | null
           role?: 'customer' | 'admin'
+          gender?: 'male' | 'female' | 'other' | null
+          date_of_birth?: string | null
         }
       }
       categories: {
@@ -315,6 +321,47 @@ export interface Database {
         }
         Update: {
           is_active?: boolean
+        }
+      }
+      user_addresses: {
+        Row: {
+          id: string
+          user_id: string
+          full_name: string
+          phone: string | null
+          address_line1: string
+          address_line2: string | null
+          city: string
+          state: string
+          postal_code: string
+          country: string | null
+          is_default: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          full_name: string
+          phone?: string | null
+          address_line1: string
+          address_line2?: string | null
+          city: string
+          state: string
+          postal_code: string
+          country?: string | null
+          is_default?: boolean
+          created_at?: string
+        }
+        Update: {
+          full_name?: string
+          phone?: string | null
+          address_line1?: string
+          address_line2?: string | null
+          city?: string
+          state?: string
+          postal_code?: string
+          country?: string | null
+          is_default?: boolean
         }
       }
     }

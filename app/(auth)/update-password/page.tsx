@@ -21,8 +21,8 @@ export default function UpdatePasswordPage() {
     if (!supabase) return;
     
     // Check if we have a session (the link should sign the user in automatically)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
+    supabase.auth.getSession().then((response: any) => {
+      if (!response.data.session) {
         // If not signed in (maybe link expired or opened in different browser), redirect to login
         // But for update password, usually the hash params handle it. 
         // We'll let it stay for now as SUPABASE handles the hash exchange automatically on client init

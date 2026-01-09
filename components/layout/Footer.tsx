@@ -95,26 +95,13 @@ export default function Footer() {
               {/* Logo */}
               <Link href="/" className="inline-block mb-6">
                 <div className="flex items-center gap-3">
-                  <svg width="40" height="40" viewBox="0 0 48 48" className="text-terracotta">
-                    <path
-                      d="M24 4 C32 4 42 10 44 20 C46 30 38 42 26 44 C14 46 4 38 4 26 C4 14 14 4 24 4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                    <path
-                      d="M16 18 L24 30 L32 18"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <circle cx="24" cy="14" r="2" fill="var(--gold)" />
-                    <circle cx="18" cy="36" r="1.5" fill="var(--sage)" />
-                    <circle cx="32" cy="34" r="1.5" fill="var(--sage)" />
-                  </svg>
+                  <div className="w-10 h-10 rounded-xl bg-terracotta flex items-center justify-center">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white">
+                      <path d="M12 2L14 10L22 12L14 14L12 22L10 14L2 12L10 10L12 2Z" fill="currentColor" />
+                      <circle cx="19" cy="5" r="1" fill="currentColor" />
+                      <path d="M19 3V7M17 5H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                  </div>
                   <div>
                     <span className="font-display text-xl font-medium text-text-dark">
                       The Vybe Store
@@ -218,7 +205,7 @@ export default function Footer() {
             variants={staggerContainer}
           >
             <motion.div 
-              className="bg-cream/60 backdrop-blur-sm rounded-2xl p-6 border border-clay/10"
+              className="bg-cream/60 dark:bg-[var(--background-alt)]/60 backdrop-blur-sm rounded-2xl p-6 border border-clay/10 dark:border-white/10"
               variants={fadeInUp}
             >
               <div className="flex items-center gap-2 mb-3">
@@ -248,7 +235,7 @@ export default function Footer() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Your email"
-                    className="flex-1 px-4 py-2.5 bg-cream border border-clay/20 rounded-full text-sm text-text-dark placeholder:text-text-light focus:outline-none focus:border-terracotta transition-colors"
+                    className="flex-1 px-4 py-2.5 bg-cream dark:bg-[var(--background)] border border-clay/20 dark:border-white/10 rounded-full text-sm text-text-dark dark:text-gray-100 placeholder:text-text-light focus:outline-none focus:border-terracotta transition-colors"
                   />
                   <motion.button
                     type="submit"

@@ -70,7 +70,7 @@ export default function CustomCursor() {
 
   return (
     <motion.div
-      className="fixed top-0 left-0 pointer-events-none z-[9999]"
+      className="fixed top-0 left-0 pointer-events-none z-[9999] hidden lg:block"
       style={{ x, y }}
     >
       {/* Simple dot cursor */}

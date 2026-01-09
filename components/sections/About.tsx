@@ -53,15 +53,15 @@ export default function About() {
 
             {/* Floating badge */}
             <motion.div
-              className="absolute -bottom-6 -right-6 lg:right-6 bg-cream shadow-lg rounded-2xl p-6 border border-clay/20"
+              className="absolute bottom-4 right-4 md:bottom-0 md:-right-6 lg:right-6 bg-cream shadow-lg rounded-2xl p-4 md:p-6 border border-clay/20"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.5 }}
             >
               <div className="text-center">
-                <span className="block text-4xl font-serif font-bold text-terracotta">6+</span>
-                <span className="text-sm text-text-muted">Years of Crafting</span>
+                <span className="block text-3xl md:text-4xl font-serif font-bold text-terracotta">6+</span>
+                <span className="text-xs md:text-sm text-text-muted">Years of Crafting</span>
               </div>
             </motion.div>
           </motion.div>

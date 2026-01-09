@@ -73,7 +73,7 @@ export function useSupabaseCart(): UseSupabaseCartReturn {
 
       if (itemsError) throw itemsError;
 
-      setItems((cartItems || []).filter(item => item.product) as CartItemWithProduct[]);
+      setItems((cartItems || []).filter((item: any) => item.product) as CartItemWithProduct[]);
     } catch (err: any) {
       console.error('Error fetching cart:', err);
       setError(err.message);

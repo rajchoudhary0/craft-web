@@ -61,7 +61,7 @@ export default function Hero() {
 
       {/* Floating decorative elements */}
       <motion.div
-        className="absolute top-1/4 left-[10%] w-32 h-32 pointer-events-none z-10"
+        className="hidden md:block absolute top-1/4 left-[10%] w-32 h-32 pointer-events-none z-10"
         style={{ x: floatX, y: floatY }}
       >
         <motion.svg
@@ -78,7 +78,7 @@ export default function Hero() {
       </motion.div>
 
       <motion.div
-        className="absolute top-1/3 right-[15%] w-24 h-24 pointer-events-none z-10"
+        className="hidden md:block absolute top-1/3 right-[15%] w-24 h-24 pointer-events-none z-10"
         style={{ x: useTransform(floatX, v => -v * 1.5), y: useTransform(floatY, v => -v * 1.5) }}
       >
         <motion.div
@@ -89,7 +89,7 @@ export default function Hero() {
       </motion.div>
 
       <motion.div
-        className="absolute bottom-1/4 left-[20%] w-16 h-16 pointer-events-none z-10"
+        className="hidden md:block absolute bottom-1/4 left-[20%] w-16 h-16 pointer-events-none z-10"
         style={{ x: useTransform(floatX, v => v * 2), y: useTransform(floatY, v => v * 2) }}
       >
         <motion.svg
@@ -105,7 +105,7 @@ export default function Hero() {
 
       {/* Leaf decoration */}
       <motion.div
-        className="absolute bottom-1/3 right-[10%] pointer-events-none z-10"
+        className="hidden lg:block absolute bottom-1/3 right-[10%] pointer-events-none z-10"
         style={{ x: useTransform(floatX, v => -v), y: useTransform(floatY, v => -v) }}
       >
         <motion.svg

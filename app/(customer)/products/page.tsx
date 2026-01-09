@@ -72,14 +72,14 @@ export default function ProductsPage() {
   }, [products, sortBy]);
 
   return (
-    <div className="min-h-screen pt-24 pb-20 bg-gray-50">
+    <div className="min-h-screen pt-24 pb-20 bg-gray-50 dark:bg-[var(--background)] overflow-x-hidden">
       {/* Hero */}
-      <section className="bg-white py-12 md:py-16 border-b border-gray-100">
+      <section className="bg-white dark:bg-[var(--background)] py-12 md:py-16 border-b border-gray-100 dark:border-white/5">
         <div className="container-custom text-center">
           <h1 className="heading-xl text-text-dark mb-3">
             Shop <span className="text-gradient">Handmade</span>
           </h1>
-          <p className="text-gray-500 max-w-lg mx-auto">
+          <p className="text-gray-500 dark:text-gray-400 max-w-lg mx-auto">
             Browse our collection of unique, handcrafted treasures. 
             Each piece is made with love by Neha Kumari.
           </p>
@@ -90,58 +90,67 @@ export default function ProductsPage() {
       <section className="container-custom py-8">
         
         {/* Filters Sticky Bar */}
-        <div className="sticky top-header z-30 bg-gray-50/95 backdrop-blur-sm py-4 mb-8 -mx-4 px-4 md:mx-0 md:px-0 border-b border-gray-200">
-          <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="sticky top-20 z-30 bg-gray-50/95 dark:bg-[var(--background)]/95 backdrop-blur-sm py-4 mb-8 border-b border-gray-200 dark:border-white/10">
+          {/* Mobile: Stack vertically, Desktop: Side by side */}
+          <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-4">
             
-            {/* Category Pills */}
-            <div className="flex-1 overflow-x-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
-              <div className="flex items-center gap-2 min-w-max">
-                {allCategories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setActiveCategory(cat)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
-                      activeCategory === cat
-                        ? 'bg-terracotta text-white shadow-md transform scale-105'
-                        : 'bg-white text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-200'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
+            {/* Category Pills - Scrollable with fade edges */}
+            <div className="relative flex-1 min-w-0">
+              {/* Fade edges */}
+              <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none" />
+              
+              <div className="overflow-x-auto scrollbar-sleek px-1 pb-2">
+                <div className="flex items-center gap-2 px-4">
+                  {allCategories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setActiveCategory(cat)}
+                      className={`px-4 py-2.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                        activeCategory === cat
+                          ? 'bg-terracotta text-white shadow-md'
+                          : 'bg-white dark:bg-[var(--background-alt)] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-white/10'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
             {/* Right Side Controls */}
-              <div className="flex items-center gap-3 ml-auto pl-4 border-l border-gray-200">
+            <div className="flex items-center gap-3 justify-between sm:justify-end">
               <span className="text-sm font-medium text-gray-500 whitespace-nowrap">
                 {sortedProducts.length} items
               </span>
               
-              <div className="relative group">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="appearance-none bg-white pl-4 pr-10 py-2 rounded-lg text-sm font-medium text-gray-700 border border-transparent hover:border-gray-200 focus:outline-none focus:ring-2 focus:ring-terracotta/20 cursor-pointer transition-all"
-                >
-                  <option value="featured">Featured</option>
-                  <option value="newest">Newest</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                  <option value="name">Name: A-Z</option>
-                </select>
-                <div className="absolute right-0 top-0 bottom-0 w-8 flex items-center justify-center pointer-events-none group-hover:text-terracotta transition-colors">
-                  <ChevronDown className="w-4 h-4" />
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="appearance-none bg-white dark:bg-[var(--background-alt)] pl-4 pr-10 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-terracotta/20 cursor-pointer"
+                  >
+                    <option value="featured">Featured</option>
+                    <option value="newest">Newest</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="name">Name: A-Z</option>
+                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                  </div>
                 </div>
-              </div>
 
-              {/* Mobile Filter Toggle */}
-              <button
-                onClick={() => setIsFilterOpen(true)}
-                className="lg:hidden p-2 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-terracotta transition-colors"
-              >
-                <Filter className="w-5 h-5" />
-              </button>
+                {/* Mobile Filter Toggle */}
+                <button
+                  onClick={() => setIsFilterOpen(true)}
+                  className="lg:hidden p-2 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-terracotta transition-colors"
+                >
+                  <Filter className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -196,15 +205,15 @@ export default function ProductsPage() {
           >
             <div className="absolute inset-0 bg-black/40" onClick={() => setIsFilterOpen(false)} />
             <motion.div
-              className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[75vh] overflow-auto"
+              className="absolute bottom-0 left-0 right-0 bg-white dark:bg-[var(--background)] rounded-t-2xl max-h-[75vh] overflow-auto"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-100 sticky top-0 bg-white">
-                <h3 className="font-semibold text-gray-900">Filter & Sort</h3>
+              <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/10 sticky top-0 bg-white dark:bg-[var(--background)] z-10">
+                <h3 className="font-semibold text-gray-900 dark:text-white">Filter & Sort</h3>
                 <button onClick={() => setIsFilterOpen(false)} className="p-2">
                   <X className="w-5 h-5" />
                 </button>
@@ -258,7 +267,7 @@ export default function ProductsPage() {
               </div>
 
               {/* Apply */}
-              <div className="p-4 border-t border-gray-100 sticky bottom-0 bg-white">
+              <div className="p-4 border-t border-gray-100 dark:border-white/10 sticky bottom-0 bg-white dark:bg-[var(--background)]">
                 <button
                   onClick={() => setIsFilterOpen(false)}
                   className="w-full py-3 bg-terracotta text-white rounded-full font-medium"

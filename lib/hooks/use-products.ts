@@ -88,7 +88,7 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsReturn
 
       // Fetch tags for each product
       const productsWithTags = await Promise.all(
-        (data || []).map(async (product) => {
+        (data || []).map(async (product: any) => {
           const { data: tagData } = await supabase
             .from('product_tags')
             .select('tag:tags(*)')

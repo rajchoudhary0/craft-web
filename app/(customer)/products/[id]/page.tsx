@@ -259,45 +259,51 @@ export default function ProductPage({ params }: ProductPageProps) {
 
             {/* Quantity & Add to Cart */}
             <motion.div 
-              className="flex flex-col sm:flex-row gap-4 mb-8"
+              className="mb-8"
               variants={fadeInUp}
             >
-              <div className="flex items-center gap-3 bg-sand rounded-full p-1">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-10 h-10 rounded-full bg-cream flex items-center justify-center hover:bg-clay/20 transition-colors"
-                  aria-label="Decrease quantity"
-                >
-                  <Minus className="w-4 h-4" />
-                </button>
-                <span className="w-8 text-center font-medium">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="w-10 h-10 rounded-full bg-cream flex items-center justify-center hover:bg-clay/20 transition-colors"
-                  aria-label="Increase quantity"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
+              {/* Quantity Selector */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="inline-flex items-center gap-2 bg-sand rounded-full p-1">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-10 h-10 rounded-full bg-cream flex items-center justify-center hover:bg-clay/20 transition-colors"
+                    aria-label="Decrease quantity"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="w-8 text-center font-medium">{quantity}</span>
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-10 h-10 rounded-full bg-cream flex items-center justify-center hover:bg-clay/20 transition-colors"
+                    aria-label="Increase quantity"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
-              <Button 
-                variant="primary" 
-                size="lg" 
-                className="flex-1"
-                onClick={handleAddToCart}
-                leftIcon={<ShoppingBag className="w-5 h-5" />}
-              >
-                Add to Cart
-              </Button>
+              {/* Add to Cart + Wishlist Row */}
+              <div className="flex gap-3">
+                <Button 
+                  variant="primary" 
+                  size="lg" 
+                  className="flex-1"
+                  onClick={handleAddToCart}
+                  leftIcon={<ShoppingBag className="w-5 h-5" />}
+                >
+                  Add to Cart
+                </Button>
 
-              <motion.button
-                className="w-12 h-12 rounded-full bg-sand flex items-center justify-center hover:bg-terracotta hover:text-cream transition-colors"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                aria-label="Add to wishlist"
-              >
-                <Heart className="w-5 h-5" />
-              </motion.button>
+                <motion.button
+                  className="w-12 h-12 rounded-full bg-sand flex items-center justify-center hover:bg-terracotta hover:text-cream transition-colors flex-shrink-0"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  aria-label="Add to wishlist"
+                >
+                  <Heart className="w-5 h-5" />
+                </motion.button>
+              </div>
             </motion.div>
 
             {/* Trust badges */}

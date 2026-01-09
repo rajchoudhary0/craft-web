@@ -112,10 +112,10 @@ export default function FeaturedProducts() {
             initial="initial"
             whileInView="animate"
             viewport={{ once: true }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
+            className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-8 sm:overflow-visible scrollbar-hide"
           >
             {products.map((product) => (
-              <div key={product.id} className="h-[500px]">
+              <div key={product.id} className="min-w-[80vw] sm:min-w-0 snap-center min-h-[400px] h-full flex-shrink-0 sm:flex-shrink">
                 <ProductCard product={product} />
               </div>
             ))}
