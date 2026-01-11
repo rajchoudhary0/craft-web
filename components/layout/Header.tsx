@@ -9,6 +9,7 @@ import { useCart } from '@/lib/cart-context';
 import { useWishlist } from '@/lib/wishlist-context';
 import { useAuth } from '@/lib/auth-context';
 import { products } from '@/lib/data';
+import MobileMenu from './MobileMenu';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -44,15 +45,15 @@ export default function Header() {
     }
   }, []);
 
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    if (savedTheme) {
+      setTheme(savedTheme);
+      document.documentElement.setAttribute('data-theme', savedTheme);
     }
-    return () => { document.body.style.overflow = 'unset'; };
-  }, [isMobileMenuOpen]);
+  }, []);
+
+  // Body scroll lock moved to MobileMenu component
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -341,131 +342,17 @@ export default function Header() {
       </AnimatePresence>
 
       {/* ===== MOBILE MENU ===== */}
-      <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              key="mobile-backdrop"
-              className="fixed inset-0 z-50 lg:hidden bg-text-dark/70 backdrop-blur-sm"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, transition: { duration: 0.5 } }}
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-          )}
-
-          {isMobileMenuOpen && (
-            <motion.div
-              key="mobile-sidebar"
-              className="fixed right-0 top-0 bottom-0 z-50 w-[85%] max-w-sm bg-[var(--background)] border-l border-clay/10 lg:hidden"
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%', transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] } }}
-              transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-clay/10">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-terracotta flex items-center justify-center">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-white">
-                      <path d="M12 2L14 10L22 12L14 14L12 22L10 14L2 12L10 10L12 2Z" fill="currentColor" />
-                      <circle cx="19" cy="5" r="1" fill="currentColor" />
-                      <path d="M19 3V7M17 5H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                    </svg>
-                  </div>
-                  <span className="font-display font-semibold text-text-dark">The Vybe Store</span>
-                </div>
-                <button onClick={() => setIsMobileMenuOpen(false)} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-sand">
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              {/* Nav */}
-              <nav className="p-6">
-                <ul className="space-y-2">
-                  {navLinks.map((link, index) => {
-                    const isActive = pathname === link.href;
-                    return (
-                      <motion.li
-                        key={link.href}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                      >
-                        <Link
-                          href={link.href}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className={`block px-4 py-4 rounded-xl text-lg font-medium transition-all ${
-                            isActive 
-                              ? 'bg-terracotta text-white' 
-                              : 'text-text-dark hover:bg-sand'
-                          }`}
-                        >
-                          {link.label}
-                        </Link>
-                      </motion.li>
-                    );
-                  })}
-                </ul>
-              </nav>
-
-              {/* Quick Actions Bar */}
-              <div className="absolute bottom-0 left-0 right-0 border-t border-clay/10 bg-[var(--background)]">
-                <div className="grid grid-cols-4 divide-x divide-clay/10">
-                  {/* Account (Replaces Search) */}
-                  <Link 
-                    href={user ? "/account" : "/login"}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex flex-col items-center py-4 text-text-muted hover:text-terracotta transition-colors"
-                  >
-                    <User className="w-5 h-5 mb-1" />
-                    <span className="text-[10px] uppercase tracking-wider">{user ? "Account" : "Sign In"}</span>
-                  </Link>
-                  
-                  {/* Wishlist */}
-                  <Link 
-                    href="/wishlist"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex flex-col items-center py-4 text-text-muted hover:text-terracotta transition-colors relative"
-                  >
-                    <Heart className="w-5 h-5 mb-1" />
-                    <span className="text-[10px] uppercase tracking-wider">Wishlist</span>
-                    {wishlistItems.length > 0 && (
-                      <span className="absolute top-2 right-1/4 w-4 h-4 bg-terracotta text-white text-[10px] rounded-full flex items-center justify-center">
-                        {wishlistItems.length}
-                      </span>
-                    )}
-                  </Link>
-                  
-                  {/* Cart */}
-                  <button 
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      openCart();
-                    }}
-                    className="flex flex-col items-center py-4 text-text-muted hover:text-terracotta transition-colors relative"
-                  >
-                    <ShoppingBag className="w-5 h-5 mb-1" />
-                    <span className="text-[10px] uppercase tracking-wider">Cart</span>
-                    {totalItems > 0 && (
-                      <span className="absolute top-2 right-1/4 w-4 h-4 bg-terracotta text-white text-[10px] rounded-full flex items-center justify-center">
-                        {totalItems}
-                      </span>
-                    )}
-                  </button>
-                  
-                  {/* Theme Toggle */}
-                  <button 
-                    onClick={toggleTheme}
-                    className="flex flex-col items-center py-4 text-text-muted hover:text-terracotta transition-colors"
-                  >
-                    {theme === 'light' ? <Moon className="w-5 h-5 mb-1" /> : <Sun className="w-5 h-5 mb-1" />}
-                    <span className="text-[10px] uppercase tracking-wider">{theme === 'light' ? 'Dark' : 'Light'}</span>
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-      </AnimatePresence>
+      <MobileMenu
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        navLinks={navLinks}
+        user={user}
+        wishlistCount={wishlistItems.length}
+        cartCount={totalItems}
+        onOpenCart={openCart}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+      />
     </>
   );
 }
