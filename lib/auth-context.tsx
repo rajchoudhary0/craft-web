@@ -32,14 +32,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          // Handle invalid refresh token error gracefully
+          if (error.message?.includes('Refresh Token')) {
+            console.warn('Session expired, signing out...');
+            await supabase.auth.signOut();
+          }
+        }
+        setSession(session);
+        setUser(session?.user ?? null);
+      } catch (err) {
+        console.error('Error getting session:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getInitialSession();
+
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsLoading(false);
-      // Refresh router on auth change to update protected routes
-      router.refresh(); 
+    } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
+      // Handle token refresh errors gracefully
+      if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+        setSession(session);
+        setUser(session?.user ?? null);
+        // Refresh router on auth change to update protected routes
+        router.refresh();
+      }
     });
 
     return () => subscription.unsubscribe();
