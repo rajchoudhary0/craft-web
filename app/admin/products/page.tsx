@@ -71,7 +71,9 @@ export default function AdminProductsPage() {
       .order('created_at', { ascending: false });
 
     if (data) {
-      setProducts(data as unknown as Product[]);
+      // Filter out Gift Cards as they are managed separately or hidden from main product view
+      const validProducts = (data as unknown as Product[]).filter(p => p.category?.name !== 'Gift Cards');
+      setProducts(validProducts);
     }
     setIsLoading(false);
   };

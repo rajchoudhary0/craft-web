@@ -17,18 +17,10 @@ export default function LoginPage() {
   const supabase = createClient();
   const { user, isLoading: authLoading } = useAuth();
 
-  // Demo credentials for development (matching AdminContext)
-  const DEMO_ADMIN = {
-    email: 'admin@thevybestore.com',
-    password: 'admin123',
-  };
-
-  // Redirect if already logged in - wait for logic to determine WHERE to go
+  // Redirect if already logged in
   useEffect(() => {
     const checkRedirect = async () => {
       if (!authLoading && user) {
-         // If we have a user, check if they are an admin to redirect correctly
-         // This handles the case where an admin is logged in but visits /login
          try {
             const { data: profile } = await supabase
               .from('profiles')
@@ -56,25 +48,8 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      // 1. Check for Demo Admin first
-      if (email === DEMO_ADMIN.email && password === DEMO_ADMIN.password) {
-        const demoUser = {
-          id: 'demo-admin-id',
-          email: DEMO_ADMIN.email,
-          role: 'admin',
-        };
-        // We need to set this for AdminContext to pick it up
-        localStorage.setItem('demoAdminUser', JSON.stringify(demoUser));
-        
-        // Simulate a small delay for better UX
-        await new Promise(resolve => setTimeout(resolve, 600));
-        
-        router.push('/admin');
-        return;
-      }
-
-      // 2. Regular Supabase Auth
-      const { data, error } = await supabase!.auth.signInWithPassword({
+      // Regular Supabase Auth
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -82,8 +57,8 @@ export default function LoginPage() {
       if (error) throw error;
       
       if (data.user) {
-        // 3. Check Role
-        const { data: profile, error: profileError } = await supabase
+        // Check Role
+        const { data: profile } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', data.user.id)

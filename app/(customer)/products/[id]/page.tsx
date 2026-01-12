@@ -6,12 +6,13 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShoppingBag, Heart, Share2, ChevronLeft, ChevronRight, 
-  Minus, Plus, Check, Truck, Shield, RefreshCw, ChevronDown, Loader2
+  Minus, Plus, Check, Truck, Shield, RefreshCw, ChevronDown, Loader2, Star
 } from 'lucide-react';
 import { useProduct, useProducts } from '@/lib/hooks/use-products';
 import { useCart } from '@/lib/cart-context';
 import { staggerContainer, fadeInUp } from '@/lib/animations';
 import Button from '@/components/ui/Button';
+import ReviewsSection from '@/components/reviews/ReviewsSection';
 
 // Format price in INR
 const formatPrice = (price: number) => {
@@ -228,8 +229,35 @@ export default function ProductPage({ params }: ProductPageProps) {
               className="heading-lg text-text-dark mb-4"
               variants={fadeInUp}
             >
-              {product.name}
+            {product.name}
             </motion.h1>
+
+            {/* Rating */}
+            {Number(product.reviews_count) > 0 && Number(product.rating) > 0 && (
+              <motion.div 
+                className="flex items-center gap-2 mb-4"
+                variants={fadeInUp}
+              >
+                <div className="flex items-center">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`w-5 h-5 ${
+                        star <= Math.round(product.rating || 0)
+                          ? 'text-gold fill-gold'
+                          : 'text-gray-300 dark:text-gray-600'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-sm font-medium text-text-dark">
+                  {(product.rating || 0).toFixed(1)}
+                </span>
+                <span className="text-sm text-text-muted">
+                  ({product.reviews_count} {product.reviews_count === 1 ? 'review' : 'reviews'})
+                </span>
+              </motion.div>
+            )}
 
             <motion.div 
               className="flex items-center gap-4 mb-6"
@@ -427,6 +455,13 @@ export default function ProductPage({ params }: ProductPageProps) {
             </motion.div>
           </motion.div>
         </div>
+
+        {/* Customer Reviews */}
+        <ReviewsSection 
+          productId={product.id} 
+          productRating={product.rating || 0}
+          reviewsCount={product.reviews_count || 0}
+        />
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (

@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, Package, ShoppingBag, Settings, 
-  LogOut, ChevronLeft, Users, Sparkles, Ticket, Gift
+  LogOut, ChevronLeft, Users, Sparkles, Ticket, Gift, MessageSquare
 } from 'lucide-react';
 import { AdminProvider, RequireAdmin, useAdmin } from '@/lib/admin-context';
 
@@ -14,6 +14,7 @@ const navItems = [
   { icon: Package, label: 'Products', href: '/admin/products' },
   { icon: ShoppingBag, label: 'Orders', href: '/admin/orders' },
   { icon: Users, label: 'Customers', href: '/admin/customers' },
+  { icon: MessageSquare, label: 'Reviews', href: '/admin/reviews' },
   { icon: Ticket, label: 'Coupons', href: '/admin/coupons' },
   { icon: Gift, label: 'Gift Cards', href: '/admin/gift-cards' },
   { icon: Settings, label: 'Settings', href: '/admin/settings' },

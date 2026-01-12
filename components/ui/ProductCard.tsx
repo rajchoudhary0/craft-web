@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { ShoppingBag, Heart, Eye, Plus } from 'lucide-react';
+import { ShoppingBag, Heart, Eye, Plus, Star } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { useWishlist } from '@/lib/wishlist-context';
 import { formatPrice } from '@/lib/data';
@@ -203,9 +203,30 @@ export default function ProductCard({ product }: ProductCardProps) {
           </span>
           
           {/* Name */}
-          <h3 className="font-medium text-sm sm:text-base text-text-dark dark:text-gray-100 group-hover:text-terracotta transition-colors line-clamp-2 mb-2 leading-tight">
+          <h3 className="font-medium text-sm sm:text-base text-text-dark dark:text-gray-100 group-hover:text-terracotta transition-colors line-clamp-2 mb-1 leading-tight">
             {product.name}
           </h3>
+          
+          {/* Star Rating - Only show if product has actual reviews */}
+          {Number(product.reviews_count) > 0 && Number(product.rating) > 0 && (
+            <div className="flex items-center gap-1.5 mb-2">
+              <div className="flex items-center">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`w-3 h-3 ${
+                      star <= Math.round(product.rating || 0)
+                        ? 'text-gold fill-gold'
+                        : 'text-gray-300 dark:text-gray-600'
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-xs text-text-muted">
+                {(product.rating || 0).toFixed(1)} ({product.reviews_count})
+              </span>
+            </div>
+          )}
           
           {/* Price Row */}
           <div className="mt-auto flex items-center gap-2">
