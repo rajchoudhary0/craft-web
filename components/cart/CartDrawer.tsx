@@ -8,7 +8,6 @@ import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight, Heart } from 'lucide-r
 import { useCart } from '@/lib/cart-context';
 import { useWishlist } from '@/lib/wishlist-context';
 import { formatPrice } from '@/lib/data';
-import { slideInRight, fadeIn } from '@/lib/animations';
 import Button from '@/components/ui/Button';
 
 export default function CartDrawer() {
@@ -123,7 +122,7 @@ export default function CartDrawer() {
                     Your cart is empty
                   </h3>
                   <p className="text-text-muted mb-6">
-                    Looks like you haven't added any handcrafted treasures yet.
+                    Looks like you haven&apos;t added any handcrafted treasures yet.
                   </p>
                   <Button onClick={closeCart} variant="primary">
                     Start Shopping

@@ -26,10 +26,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const supabase = createClient();
 
-  // Load wishlist on mount and when user changes
-  useEffect(() => {
-    loadWishlist();
-  }, [user]);
+
 
   // Load wishlist from appropriate source
   const loadWishlist = useCallback(async () => {
@@ -63,6 +60,11 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     }
   }, [user, supabase]);
+  
+  // Load wishlist on mount and when user changes
+  useEffect(() => {
+    loadWishlist();
+  }, [user, loadWishlist]);
 
   // Get wishlist from localStorage
   const getLocalWishlist = (): Product[] => {

@@ -10,7 +10,7 @@ interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
   navLinks: { href: string; label: string }[];
-  user: any;
+  user: { id: string; email?: string } | null;
   wishlistCount: number;
   cartCount: number;
   onOpenCart: () => void;

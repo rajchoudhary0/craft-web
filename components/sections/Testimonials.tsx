@@ -1,4 +1,4 @@
-import Image from 'next/image';
+
 
 const testimonials = [
   {
@@ -45,7 +45,7 @@ export default function Testimonials() {
               key={testimonial.id} 
               className="bg-cream rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow duration-300 border border-stone-100 flex flex-col"
             >
-              <div className="text-terracotta mb-6 text-4xl font-serif">"</div>
+              <div className="text-terracotta mb-6 text-4xl font-serif">&quot;</div>
               <p className="text-text-muted text-lg italic mb-6 flex-grow">
                 {testimonial.content}
               </p>

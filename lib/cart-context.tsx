@@ -54,17 +54,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     appliedAmount: number;
   } | null>(null);
 
-  // Load cart on mount and when user changes
-  useEffect(() => {
-    loadCart();
-    // Load persisted coupon/gift card
-    if (typeof window !== 'undefined') {
-      const savedDiscount = localStorage.getItem('cart_discount');
-      const savedGiftCard = localStorage.getItem('cart_gift_card');
-      if (savedDiscount) setDiscount(JSON.parse(savedDiscount));
-      if (savedGiftCard) setGiftCard(JSON.parse(savedGiftCard));
-    }
-  }, [user]);
+
 
   // Save discount/giftCard to local storage when they change
   useEffect(() => {
@@ -109,6 +99,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     }
   }, [user, supabase]);
+  
+  // Load cart on mount and when user changes
+  useEffect(() => {
+    loadCart();
+    // Load persisted coupon/gift card
+    if (typeof window !== 'undefined') {
+      const savedDiscount = localStorage.getItem('cart_discount');
+      const savedGiftCard = localStorage.getItem('cart_gift_card');
+      if (savedDiscount) setDiscount(JSON.parse(savedDiscount));
+      if (savedGiftCard) setGiftCard(JSON.parse(savedGiftCard));
+    }
+  }, [user, loadCart]);
 
   // Get cart from localStorage
   const getLocalCart = (): CartItem[] => {

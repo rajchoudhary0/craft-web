@@ -57,7 +57,7 @@ export default function LatestHandcrafts() {
       setIsLoading(false);
     }
     fetchLatest();
-  }, []);
+  }, [supabase]);
 
   if (isLoading) {
     return (

@@ -54,7 +54,7 @@ export default function FeaturedProducts() {
       setIsLoading(false);
     }
     fetchFeatured();
-  }, []);
+  }, [supabase]);
 
   if (isLoading) {
     return (
