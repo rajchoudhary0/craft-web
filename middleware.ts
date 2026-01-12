@@ -42,7 +42,22 @@ export async function middleware(request: NextRequest) {
   // issues with users being randomly logged out.
   
   // This will refresh the session if expired
-  await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const pathname = request.nextUrl.pathname
+
+  // If user is authenticated and trying to access login pages, redirect them
+  if (user && (pathname === '/login' || pathname === '/admin/login' || pathname === '/signup')) {
+    // Check if user is an admin
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const redirectUrl = profile?.role === 'admin' ? '/admin' : '/account'
+    return NextResponse.redirect(new URL(redirectUrl, request.url))
+  }
 
   return supabaseResponse
 }

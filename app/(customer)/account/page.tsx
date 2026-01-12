@@ -23,6 +23,7 @@ export default function AccountPage() {
   const { orders, isLoading: ordersLoading } = useOrders();
   const { items: wishlistItems, removeFromWishlist } = useWishlist();
   const [profileLoading, setProfileLoading] = useState(false);
+  const [demoAdmin, setDemoAdmin] = useState<any>(null);
   const [profileData, setProfileData] = useState({
     full_name: '',
     phone: '+91',
@@ -68,11 +69,30 @@ export default function AccountPage() {
     }
   };
 
+  // Check for demo admin user on mount
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/login');
+    const demoUser = localStorage.getItem('demoAdminUser');
+    if (demoUser) {
+      try {
+        const parsed = JSON.parse(demoUser);
+        setDemoAdmin(parsed);
+      } catch {}
     }
-  }, [user, isLoading, router]);
+  }, []);
+
+  useEffect(() => {
+    // Allow access if user is logged in OR demo admin is present
+    if (!isLoading && !user && !demoAdmin) {
+      // Wait a bit for demoAdmin state to be set
+      const timer = setTimeout(() => {
+        const demoUser = localStorage.getItem('demoAdminUser');
+        if (!demoUser) {
+          router.push('/login');
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [user, isLoading, router, demoAdmin]);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -196,13 +216,26 @@ export default function AccountPage() {
     }
   };
 
-  if (isLoading || !user) {
+  // Show loading spinner while checking auth
+  if (isLoading) {
     return (
       <div className="min-h-screen pt-32 flex justify-center">
         <div className="w-8 h-8 border-2 border-terracotta border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
+
+  // If no user and no demo admin, show loading (redirect will happen)
+  if (!user && !demoAdmin) {
+    return (
+      <div className="min-h-screen pt-32 flex justify-center">
+        <div className="w-8 h-8 border-2 border-terracotta border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Use demo admin data if no real user
+  const currentUser = user || demoAdmin;
 
   const tabs = [
     { id: 'orders', label: 'My Orders', icon: Package, count: orders.length },
@@ -250,9 +283,9 @@ export default function AccountPage() {
                 <User className="w-8 h-8" />
               </div>
               <h2 className="font-serif text-xl font-medium text-text-dark">
-                {profile?.full_name || user.email?.split('@')[0]}
+                {profile?.full_name || currentUser.email?.split('@')[0] || 'Admin'}
               </h2>
-              <p className="text-sm text-text-muted mt-1">{user.email}</p>
+              <p className="text-sm text-text-muted mt-1">{currentUser.email || 'admin@thevybestore.com'}</p>
             </div>
 
             {/* Navigation */}
@@ -689,7 +722,7 @@ export default function AccountPage() {
                       <label className="block text-sm font-medium text-text-dark mb-2">Email</label>
                       <input
                         type="email"
-                        value={user.email || ''}
+                        value={currentUser.email || 'admin@thevybestore.com'}
                         disabled
                         className="w-full px-4 py-3 bg-gray-100 dark:bg-white/5 border border-clay/20 dark:border-white/10 rounded-xl text-text-muted cursor-not-allowed"
                       />

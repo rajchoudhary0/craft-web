@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Menu, X, Sun, Moon, Search, Heart, ArrowRight, Sparkles, User } from 'lucide-react';
+import { ShoppingBag, Menu, X, Sun, Moon, Search, Heart, ArrowRight, Sparkles, User, Settings } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { useWishlist } from '@/lib/wishlist-context';
 import { useAuth } from '@/lib/auth-context';
+import { createClient } from '@/lib/supabase/client';
 import { products } from '@/lib/data';
 import MobileMenu from './MobileMenu';
 
@@ -25,11 +26,52 @@ export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [isAdmin, setIsAdmin] = useState(false);
   const { totalItems, openCart } = useCart();
   const { items: wishlistItems } = useWishlist();
   const { user } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const supabase = createClient();
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      // Check for demo admin user first
+      const demoUser = localStorage.getItem('demoAdminUser');
+      if (demoUser) {
+        try {
+          const parsed = JSON.parse(demoUser);
+          if (parsed.role === 'admin') {
+            setIsAdmin(true);
+            return;
+          }
+        } catch {
+          // Invalid JSON, ignore
+        }
+      }
+
+      // Check Supabase user role
+      if (user && supabase) {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+          
+          setIsAdmin(profile?.role === 'admin');
+        } catch {
+          setIsAdmin(false);
+        }
+      } else if (!demoUser) {
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdminRole();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -109,7 +151,7 @@ export default function Header() {
                   The Vybe Store
                 </h1>
                 <p className="text-[10px] tracking-[0.15em] uppercase text-text-muted font-medium mt-0.5">
-                  by Neha Kumari
+                  by Raj
                 </p>
               </div>
             </Link>
@@ -185,8 +227,22 @@ export default function Header() {
                 <Search className="w-5 h-5" />
               </motion.button>
 
+              {/* Admin Dashboard - Only visible to admins */}
+              {isAdmin && (
+                <Link href="/admin">
+                  <motion.div
+                    className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-sage/20 text-sage-dark hover:bg-sage/30 transition-all"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span className="text-sm font-medium">Admin</span>
+                  </motion.div>
+                </Link>
+              )}
+
               {/* Account */}
-              <Link href={user ? "/account" : "/login"}>
+              <Link href={(isAdmin || user) ? "/account" : "/login"}>
                 <motion.div
                   className="hidden sm:flex w-10 h-10 items-center justify-center rounded-full text-text-dark hover:bg-sand hover:text-terracotta transition-all"
                   whileHover={{ scale: 1.05 }}
@@ -352,6 +408,7 @@ export default function Header() {
         onOpenCart={openCart}
         theme={theme}
         onToggleTheme={toggleTheme}
+        isAdmin={isAdmin}
       />
     </>
   );

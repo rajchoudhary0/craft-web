@@ -1,18 +1,21 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
+import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight, Heart } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
+import { useWishlist } from '@/lib/wishlist-context';
 import { formatPrice } from '@/lib/data';
 import { slideInRight, fadeIn } from '@/lib/animations';
 import Button from '@/components/ui/Button';
 
 export default function CartDrawer() {
   const { items, isOpen, closeCart, totalItems, totalPrice, updateQuantity, removeItem } = useCart();
+  const { addToWishlist, isInWishlist } = useWishlist();
   const drawerRef = useRef<HTMLDivElement>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   // Close on escape key
   useEffect(() => {
@@ -37,6 +40,26 @@ export default function CartDrawer() {
       drawerRef.current.focus();
     }
   }, [isOpen]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setOpenMenuId(null);
+    if (openMenuId) {
+      document.addEventListener('click', handleClickOutside);
+    }
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [openMenuId]);
+
+  const handleMoveToWishlist = (item: typeof items[0]) => {
+    addToWishlist(item.product);
+    removeItem(item.product.id);
+    setOpenMenuId(null);
+  };
+
+  const handleRemove = (productId: string) => {
+    removeItem(productId);
+    setOpenMenuId(null);
+  };
 
   return (
     <AnimatePresence>
@@ -145,15 +168,59 @@ export default function CartDrawer() {
 
                         {/* Quantity controls */}
                         <div className="flex flex-col items-end justify-between">
+                        {/* Remove options menu */}
+                        <div className="relative">
                           <motion.button
-                            onClick={() => removeItem(item.product.id)}
-                            className="p-1 text-text-light hover:text-red-500 transition-colors"
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            aria-label="Remove item"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenMenuId(openMenuId === item.product.id ? null : item.product.id);
+                            }}
+                            className={`p-2 rounded-full transition-all duration-200 ${
+                              openMenuId === item.product.id 
+                                ? 'bg-sand text-terracotta' 
+                                : 'text-text-muted hover:bg-sand/50 hover:text-text-dark'
+                            }`}
+                            whileTap={{ scale: 0.95 }}
+                            aria-label="Remove options"
                           >
                             <Trash2 className="w-4 h-4" />
                           </motion.button>
+
+                          {/* Dropdown menu */}
+                          <AnimatePresence>
+                            {openMenuId === item.product.id && (
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: -10, filter: 'blur(4px)' }}
+                                animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
+                                exit={{ opacity: 0, scale: 0.95, y: -10, filter: 'blur(4px)' }}
+                                transition={{ type: 'spring', damping: 25, stiffness: 400 }}
+                                className="absolute right-0 top-10 bg-white/95 backdrop-blur-md rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/20 ring-1 ring-black/5 overflow-hidden z-[70] w-52 origin-top-right"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <button
+                                  onClick={() => handleMoveToWishlist(item)}
+                                  disabled={isInWishlist(item.product.id)}
+                                  className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-left text-text-dark hover:bg-sand/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed group active:bg-sand/50"
+                                >
+                                  <div className={`p-1.5 rounded-full ${isInWishlist(item.product.id) ? 'bg-terracotta/10' : 'bg-gray-100 group-hover:bg-white'} transition-colors`}>
+                                    <Heart className={`w-3.5 h-3.5 ${isInWishlist(item.product.id) ? 'fill-terracotta text-terracotta' : 'text-text-muted'}`} />
+                                  </div>
+                                  <span className="font-medium">{isInWishlist(item.product.id) ? 'Saved' : 'Save for later'}</span>
+                                </button>
+                                <div className="h-px bg-gradient-to-r from-transparent via-clay/10 to-transparent" />
+                                <button
+                                  onClick={() => handleRemove(item.product.id)}
+                                  className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-left text-red-600 hover:bg-red-50/50 transition-all group active:bg-red-50"
+                                >
+                                  <div className="p-1.5 rounded-full bg-red-50 group-hover:bg-red-100 transition-colors">
+                                    <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                                  </div>
+                                  <span className="font-medium">Remove</span>
+                                </button>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
 
                           <div className="flex items-center gap-2 bg-cream rounded-full">
                             <motion.button
@@ -240,3 +307,4 @@ export default function CartDrawer() {
     </AnimatePresence>
   );
 }
+

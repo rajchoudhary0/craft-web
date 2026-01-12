@@ -107,7 +107,7 @@ export default function Footer() {
                       The Vybe Store
                     </span>
                     <p className="text-[9px] tracking-[0.25em] uppercase text-terracotta font-medium -mt-0.5">
-                      by Neha Kumari
+                      by Raj Choudhary
                     </p>
                   </div>
                 </div>
@@ -133,7 +133,7 @@ export default function Footer() {
                     transition={{ duration: 1.5, ease: 'easeInOut' }}
                   />
                 </svg>
-                <p className="text-xs text-text-light italic mt-1">— Neha Kumari</p>
+                <p className="text-xs text-text-light italic mt-1">— Raj Choudhary</p>
               </div>
             </motion.div>
           </motion.div>
@@ -275,7 +275,7 @@ export default function Footer() {
             <p className="text-sm text-text-muted text-center">
               © {new Date().getFullYear()} The Vybe Store. Crafted with{' '}
               <Heart className="w-3 h-3 inline fill-terracotta text-terracotta" />{' '}
-              by Neha Kumari
+              by Raj Choudhary
             </p>
 
             {/* Handmade badge */}

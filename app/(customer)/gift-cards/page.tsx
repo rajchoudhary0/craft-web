@@ -91,7 +91,7 @@ export default function GiftCardsPage() {
                      <Gift className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                      <span className="text-xs sm:text-sm font-medium tracking-widest uppercase text-white/70">Gift Card</span>
                   </div>
-                  <h3 className="text-2xl sm:text-3xl font-serif font-bold mb-1 sm:mb-2 text-white">The Vybe Store</h3>
+                  <h3 className="text-2xl sm:text-3xl font-serif font-bold mb-1 sm:mb-2 !text-white">The Vybe Store</h3>
                   <p className="text-white/70 text-xs sm:text-sm">Valid for 12 months</p>
                 </div>
 

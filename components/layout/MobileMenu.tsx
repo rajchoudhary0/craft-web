@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { X, User, Heart, ShoppingBag, Moon, Sun } from 'lucide-react';
+import { X, User, Heart, ShoppingBag, Moon, Sun, Settings } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
 interface MobileMenuProps {
@@ -16,6 +16,7 @@ interface MobileMenuProps {
   onOpenCart: () => void;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
+  isAdmin?: boolean;
 }
 
 export default function MobileMenu({
@@ -27,7 +28,8 @@ export default function MobileMenu({
   cartCount,
   onOpenCart,
   theme,
-  onToggleTheme
+  onToggleTheme,
+  isAdmin = false
 }: MobileMenuProps) {
   const pathname = usePathname();
 
@@ -134,6 +136,28 @@ export default function MobileMenu({
                       </motion.li>
                     );
                   })}
+
+                  {/* Admin Dashboard Link - Only for admins */}
+                  {isAdmin && (
+                    <motion.li
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ 
+                        delay: 0.1 + (navLinks.length * 0.05),
+                        duration: 0.4,
+                        ease: "easeOut"
+                      }}
+                    >
+                      <Link
+                        href="/admin"
+                        onClick={onClose}
+                        className="flex items-center gap-3 px-4 py-4 rounded-xl text-lg font-medium bg-sage/20 text-sage-dark hover:bg-sage/30 transition-all"
+                      >
+                        <Settings className="w-5 h-5" />
+                        Admin Dashboard
+                      </Link>
+                    </motion.li>
+                  )}
                 </ul>
               </nav>
 
@@ -142,12 +166,12 @@ export default function MobileMenu({
                 <div className="grid grid-cols-4 divide-x divide-clay/10">
                   {/* Account */}
                   <Link 
-                    href={user ? "/account" : "/login"}
+                    href={(isAdmin || user) ? "/account" : "/login"}
                     onClick={onClose}
                     className="flex flex-col items-center py-4 text-text-muted hover:text-terracotta transition-colors"
                   >
                     <User className="w-5 h-5 mb-1" />
-                    <span className="text-[10px] uppercase tracking-wider">{user ? "Account" : "Sign In"}</span>
+                    <span className="text-[10px] uppercase tracking-wider">{(isAdmin || user) ? "Account" : "Sign In"}</span>
                   </Link>
                   
                   {/* Wishlist */}
