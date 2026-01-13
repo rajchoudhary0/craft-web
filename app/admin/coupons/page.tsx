@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Ticket, Plus, Trash2, Search, Calendar, Check, X, 
-  AlertCircle, Loader2, Copy 
+  AlertCircle, Loader2, Copy, Pencil 
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { formatPrice } from '@/lib/data';
@@ -26,6 +26,8 @@ export default function AdminCouponsPage() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -118,6 +120,58 @@ export default function AdminCouponsPage() {
       setCoupons(coupons.map(c => 
         c.id === id ? { ...c, is_active: !currentState } : c
       ));
+    }
+  };
+
+  const openEditModal = (coupon: Coupon) => {
+    setEditingCoupon(coupon);
+    setFormData({
+      code: coupon.code,
+      discount_type: coupon.discount_type,
+      discount_value: String(coupon.discount_value),
+      min_order_amount: coupon.min_order_amount ? String(coupon.min_order_amount) : '',
+      usage_limit: coupon.usage_limit ? String(coupon.usage_limit) : '',
+      end_date: coupon.end_date ? coupon.end_date.split('T')[0] : '',
+    });
+    setIsEditing(true);
+  };
+
+  const handleUpdateCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCoupon || !supabase) return;
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.from('coupons').update({
+        code: formData.code.toUpperCase(),
+        discount_type: formData.discount_type,
+        discount_value: Number(formData.discount_value),
+        min_order_amount: formData.min_order_amount ? Number(formData.min_order_amount) : 0,
+        usage_limit: formData.usage_limit ? Number(formData.usage_limit) : null,
+        end_date: formData.end_date || null,
+      }).eq('id', editingCoupon.id);
+
+      if (error) throw error;
+
+      setCoupons(coupons.map(c => 
+        c.id === editingCoupon.id ? {
+          ...c,
+          code: formData.code.toUpperCase(),
+          discount_type: formData.discount_type,
+          discount_value: Number(formData.discount_value),
+          min_order_amount: formData.min_order_amount ? Number(formData.min_order_amount) : 0,
+          usage_limit: formData.usage_limit ? Number(formData.usage_limit) : null,
+          end_date: formData.end_date || null,
+        } : c
+      ));
+      setIsEditing(false);
+      setEditingCoupon(null);
+      setFormData({ code: '', discount_type: 'percentage', discount_value: '', min_order_amount: '', usage_limit: '', end_date: '' });
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -265,6 +319,129 @@ export default function AdminCouponsPage() {
         )}
       </AnimatePresence>
 
+      {/* Edit Modal */}
+      <AnimatePresence>
+        {isEditing && editingCoupon && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              onClick={() => { setIsEditing(false); setEditingCoupon(null); }}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden"
+            >
+              <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                <h3 className="text-lg font-bold text-text-dark">Edit Coupon</h3>
+                <button onClick={() => { setIsEditing(false); setEditingCoupon(null); }} className="p-2 hover:bg-gray-100 rounded-lg">
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+              
+              <form onSubmit={handleUpdateCoupon} className="p-6 space-y-4">
+                {error && (
+                  <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
+                    {error}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-text-dark mb-1">Coupon Code</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.code}
+                    onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-terracotta uppercase tracking-wide"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-text-dark mb-1">Discount Type</label>
+                    <select
+                      value={formData.discount_type}
+                      onChange={(e) => setFormData({ ...formData, discount_type: e.target.value as any })}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-terracotta bg-white"
+                    >
+                      <option value="percentage">Percentage (%)</option>
+                      <option value="fixed">Fixed Amount (₹)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-text-dark mb-1">Value</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={formData.discount_value}
+                      onChange={(e) => setFormData({ ...formData, discount_value: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-terracotta"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-text-dark mb-1">Min. Order (₹)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.min_order_amount}
+                      onChange={(e) => setFormData({ ...formData, min_order_amount: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-terracotta"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-text-dark mb-1">Usage Limit</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={formData.usage_limit}
+                      onChange={(e) => setFormData({ ...formData, usage_limit: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-terracotta"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-text-dark mb-1">Expiry Date</label>
+                  <input
+                    type="date"
+                    value={formData.end_date}
+                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-terracotta"
+                  />
+                </div>
+
+                <div className="pt-4 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { setIsEditing(false); setEditingCoupon(null); }}
+                    className="px-4 py-2 text-text-muted hover:text-text-dark font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-6 py-2 bg-terracotta text-white rounded-xl hover:bg-terracotta-dark transition-colors font-medium disabled:opacity-50"
+                  >
+                    {isSubmitting ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Coupons List */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {isLoading ? (
@@ -300,6 +477,13 @@ export default function AdminCouponsPage() {
                   </div>
                 </div>
                 <div className="flex gap-2">
+                  <button 
+                    onClick={() => openEditModal(coupon)}
+                    className="p-1.5 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Edit"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
                   <button 
                     onClick={() => toggleActive(coupon.id, coupon.is_active)}
                     className={`p-1.5 rounded-lg transition-colors ${

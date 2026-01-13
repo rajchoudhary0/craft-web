@@ -74,21 +74,91 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsReturn
         query = query.eq('is_new', true);
       }
 
+      // Handle search - query by name, and also by category
+      let allProducts: any[] = [];
+
       if (options.search) {
-        query = query.ilike('name', `%${options.search}%`);
+        // Get category info if filtering by category
+        let categoryId: string | null = null;
+        let categoryName: string | null = null;
+        if (options.categorySlug) {
+          const { data: cat } = await supabase
+            .from('categories')
+            .select('id, name')
+            .eq('slug', options.categorySlug)
+            .single();
+          if (cat) {
+            categoryId = cat.id;
+            categoryName = cat.name;
+          }
+        }
+
+        // Check if search term matches the selected category name
+        const searchMatchesCategory = categoryName &&
+          categoryName.toLowerCase().includes(options.search.toLowerCase());
+
+        // Search by product name
+        let nameQuery = supabase
+          .from('products')
+          .select(`*, category:categories(*), images:product_images(*)`)
+          .eq('is_active', true)
+          .neq('type', 'gift_card')
+          .order('created_at', { ascending: false });
+
+        // Apply category filter if selected
+        if (categoryId) {
+          nameQuery = nameQuery.eq('category_id', categoryId);
+        }
+
+        // Only filter by name if search doesn't match category name
+        if (!searchMatchesCategory) {
+          nameQuery = nameQuery.ilike('name', `%${options.search}%`);
+        }
+
+        if (options.limit) nameQuery.limit(options.limit);
+        const { data: nameData } = await nameQuery;
+
+        // Search by category name (only if no specific category filter)
+        let catData: any[] = [];
+        if (!categoryId) {
+          const catQuery = supabase
+            .from('products')
+            .select(`*, category:categories!inner(*), images:product_images(*)`)
+            .eq('is_active', true)
+            .neq('type', 'gift_card')
+            .ilike('category.name', `%${options.search}%`)
+            .order('created_at', { ascending: false });
+
+          if (options.limit) catQuery.limit(options.limit);
+          const { data } = await catQuery;
+          catData = data || [];
+        }
+
+        // Merge and dedupe
+        allProducts = [...(nameData || [])];
+        catData.forEach((p: any) => {
+          if (!allProducts.find((existing: any) => existing.id === p.id)) {
+            allProducts.push(p);
+          }
+        });
+
+        if (options.limit) {
+          allProducts = allProducts.slice(0, options.limit);
+        }
+      } else {
+        // No search - use standard query
+        if (options.limit) {
+          query = query.limit(options.limit);
+        }
+
+        const { data, error: queryError } = await query;
+        if (queryError) throw queryError;
+        allProducts = data || [];
       }
-
-      if (options.limit) {
-        query = query.limit(options.limit);
-      }
-
-      const { data, error: queryError } = await query;
-
-      if (queryError) throw queryError;
 
       // Fetch tags for each product
       const productsWithTags = await Promise.all(
-        (data || []).map(async (product: any) => {
+        allProducts.map(async (product: any) => {
           const { data: tagData } = await supabase
             .from('product_tags')
             .select('tag:tags(*)')

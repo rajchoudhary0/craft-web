@@ -5,13 +5,14 @@ import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, Package, ShoppingBag, Settings, 
-  LogOut, ChevronLeft, Users, Sparkles, Ticket, Gift, MessageSquare
+  LogOut, ChevronLeft, Users, Sparkles, Ticket, Gift, MessageSquare, FolderTree
 } from 'lucide-react';
 import { AdminProvider, RequireAdmin, useAdmin } from '@/lib/admin-context';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/admin' },
   { icon: Package, label: 'Products', href: '/admin/products' },
+  { icon: FolderTree, label: 'Categories', href: '/admin/categories' },
   { icon: ShoppingBag, label: 'Orders', href: '/admin/orders' },
   { icon: Users, label: 'Customers', href: '/admin/customers' },
   { icon: MessageSquare, label: 'Reviews', href: '/admin/reviews' },

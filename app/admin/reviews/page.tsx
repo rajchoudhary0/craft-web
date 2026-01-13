@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageSquare, Check, X, Trash2, Plus, Loader2, 
-  Search
+  Search, Pencil
 } from 'lucide-react';
 import { useAdminReviews } from '@/lib/hooks/use-reviews';
 import StarRating from '@/components/ui/StarRating';
@@ -19,6 +19,8 @@ export default function AdminReviewsPage() {
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingReview, setEditingReview] = useState<any>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   // Filter reviews

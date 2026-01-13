@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Gift, Plus, Trash2, Search, Calendar, Check, X, 
-  AlertCircle, Loader2, CreditCard, Copy
+  AlertCircle, Loader2, CreditCard, Copy, Pencil
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { formatPrice } from '@/lib/data';
@@ -23,6 +23,8 @@ export default function AdminGiftCardsPage() {
   const [cards, setCards] = useState<GiftCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingCard, setEditingCard] = useState<GiftCard | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -122,6 +124,42 @@ export default function AdminGiftCardsPage() {
     const { error } = await supabase.from('gift_cards').delete().eq('id', id);
     if (!error) {
       setCards(cards.filter(c => c.id !== id));
+    }
+  };
+
+  const openEditModal = (card: GiftCard) => {
+    setEditingCard(card);
+    setIsEditing(true);
+  };
+
+  const handleUpdateCard = async (balance: number, status: string, recipient_email: string) => {
+    if (!editingCard || !supabase) return;
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.from('gift_cards').update({
+        balance,
+        status,
+        recipient_email: recipient_email || null,
+      }).eq('id', editingCard.id);
+
+      if (error) throw error;
+
+      setCards(cards.map(c => 
+        c.id === editingCard.id ? {
+          ...c,
+          balance,
+          status: status as any,
+          recipient_email: recipient_email || null,
+        } : c
+      ));
+      setIsEditing(false);
+      setEditingCard(null);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -276,6 +314,41 @@ export default function AdminGiftCardsPage() {
             )}
           </AnimatePresence>
 
+          {/* Edit Modal */}
+          <AnimatePresence>
+            {isEditing && editingCard && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <motion.div 
+                  initial={{ opacity: 0 }} 
+                  animate={{ opacity: 1 }} 
+                  exit={{ opacity: 0 }}
+                  onClick={() => { setIsEditing(false); setEditingCard(null); }}
+                  className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                />
+                <motion.div 
+                  initial={{ scale: 0.95, opacity: 0 }} 
+                  animate={{ scale: 1, opacity: 1 }} 
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  className="relative bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+                >
+                  <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                    <h3 className="text-lg font-bold text-text-dark">Edit Gift Card</h3>
+                    <button onClick={() => { setIsEditing(false); setEditingCard(null); }} className="p-2 hover:bg-gray-100 rounded-lg">
+                      <X className="w-5 h-5 text-gray-500" />
+                    </button>
+                  </div>
+                  
+                  <EditGiftCardForm 
+                    card={editingCard}
+                    onSave={handleUpdateCard}
+                    onCancel={() => { setIsEditing(false); setEditingCard(null); }}
+                    isSubmitting={isSubmitting}
+                  />
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
+
           {/* Cards List */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {isLoading ? (
@@ -319,12 +392,21 @@ export default function AdminGiftCardsPage() {
                         </span>
                       </div>
                     </div>
-                    <button 
-                      onClick={() => handleDelete(card.id)}
-                      className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex gap-1">
+                      <button 
+                        onClick={() => openEditModal(card)}
+                        className="p-1.5 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Edit"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(card.id)}
+                        className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="space-y-2 text-sm">
@@ -401,5 +483,95 @@ export default function AdminGiftCardsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// Edit Gift Card Form Component
+function EditGiftCardForm({ 
+  card, 
+  onSave, 
+  onCancel,
+  isSubmitting 
+}: { 
+  card: GiftCard;
+  onSave: (balance: number, status: string, recipient_email: string) => void;
+  onCancel: () => void;
+  isSubmitting: boolean;
+}) {
+  const [balance, setBalance] = useState(String(card.balance));
+  const [status, setStatus] = useState(card.status);
+  const [recipientEmail, setRecipientEmail] = useState(card.recipient_email || '');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(Number(balance), status, recipientEmail);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="p-6 space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-text-dark mb-1">Code</label>
+        <input
+          type="text"
+          value={card.code}
+          disabled
+          className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-gray-500"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-text-dark mb-1">Balance (₹)</label>
+          <input
+            type="number"
+            min="0"
+            max={card.initial_value}
+            value={balance}
+            onChange={(e) => setBalance(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-terracotta"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-text-dark mb-1">Status</label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as any)}
+            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-terracotta bg-white"
+          >
+            <option value="active">Active</option>
+            <option value="used">Used</option>
+            <option value="expired">Expired</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-text-dark mb-1">Recipient Email</label>
+        <input
+          type="email"
+          value={recipientEmail}
+          onChange={(e) => setRecipientEmail(e.target.value)}
+          placeholder="Optional"
+          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-terracotta"
+        />
+      </div>
+
+      <div className="pt-4 flex justify-end gap-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 text-text-muted hover:text-text-dark font-medium"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="px-6 py-2 bg-terracotta text-white rounded-xl hover:bg-terracotta-dark transition-colors font-medium disabled:opacity-50"
+        >
+          {isSubmitting ? 'Saving...' : 'Save Changes'}
+        </button>
+      </div>
+    </form>
   );
 }

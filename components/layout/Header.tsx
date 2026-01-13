@@ -9,7 +9,6 @@ import { useCart } from '@/lib/cart-context';
 import { useWishlist } from '@/lib/wishlist-context';
 import { useAuth } from '@/lib/auth-context';
 import { createClient } from '@/lib/supabase/client';
-import { products } from '@/lib/data';
 import MobileMenu from './MobileMenu';
 
 const navLinks = [
@@ -104,12 +103,74 @@ export default function Header() {
     document.documentElement.setAttribute('data-theme', newTheme);
   };
 
-  const searchResults = searchQuery.length > 1 
-    ? products.filter(p => 
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.category || '').toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 5)
-    : [];
+  // Dynamic search from database
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  useEffect(() => {
+    const searchProducts = async () => {
+      if (searchQuery.length < 2) {
+        setSearchResults([]);
+        return;
+      }
+
+      setIsSearching(true);
+      try {
+        // First, search by product name
+        const { data: nameData, error: nameError } = await supabase
+          .from('products')
+          .select(`
+            id, name, slug,
+            category:categories(name),
+            images:product_images(image_url, is_primary)
+          `)
+          .eq('is_active', true)
+          .ilike('name', `%${searchQuery}%`)
+          .limit(5);
+
+        if (nameError) throw nameError;
+
+        // Also search by category name
+        const { data: catData, error: catError } = await supabase
+          .from('products')
+          .select(`
+            id, name, slug,
+            category:categories!inner(name),
+            images:product_images(image_url, is_primary)
+          `)
+          .eq('is_active', true)
+          .ilike('category.name', `%${searchQuery}%`)
+          .limit(5);
+
+        // Merge results, removing duplicates
+        const allData = [...(nameData || [])];
+        (catData || []).forEach((p: any) => {
+          if (!allData.find((existing: any) => existing.id === p.id)) {
+            allData.push(p);
+          }
+        });
+
+        const formattedResults = allData.slice(0, 5).map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          slug: p.slug,
+          category: p.category?.name || 'Uncategorized',
+          images: p.images?.filter((img: any) => img.is_primary)?.[0]?.image_url || p.images?.[0]?.image_url,
+        }));
+
+        setSearchResults(formattedResults);
+      } catch (err) {
+        console.error('Search error:', err);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    // Debounce search
+    const timer = setTimeout(searchProducts, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, supabase]);
 
   return (
     <>
@@ -354,7 +415,14 @@ export default function Header() {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search handcrafted treasures..."
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && searchQuery.length > 0) {
+                          router.push(`/products?search=${encodeURIComponent(searchQuery)}`);
+                          setIsSearchOpen(false);
+                          setSearchQuery('');
+                        }
+                      }}
+                      placeholder="Search handcrafted treasures... (Press Enter)"
                       autoFocus
                       className="flex-1 text-xl text-text-dark placeholder:text-text-muted/60 focus:outline-none bg-transparent font-display"
                     />
@@ -375,7 +443,7 @@ export default function Header() {
                           className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-sand transition-colors text-left group"
                         >
                           <div className="w-14 h-14 rounded-lg bg-cream overflow-hidden flex-shrink-0 border border-clay/10">
-                            <img src={product.images?.[0] || 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800'} alt="" className="w-full h-full object-cover" />
+                            <img src={product.images || 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800'} alt="" className="w-full h-full object-cover" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-text-dark group-hover:text-terracotta transition-colors">{product.name}</p>

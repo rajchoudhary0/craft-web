@@ -38,19 +38,26 @@ export default function GiftCardsPage() {
       return;
     }
 
-    // Fetch products with type 'gift_card'
+    // Fetch products in 'Gift Cards' category (matching admin logic)
     const { data, error } = await supabase
       .from('products')
-      .select('id, name, price, description, type, images')
-      .eq('type', 'gift_card')
+      .select(`
+        id, name, price, description, type,
+        category:categories(name)
+      `)
+      .eq('is_active', true)
       .order('price', { ascending: true });
 
     if (error) {
       console.error('Error fetching gift cards:', error);
     } else {
-      setProducts(data || []);
-      if (data && data.length > 0) {
-        setSelectedProduct(data[0]); // Select first by default
+      // Filter for Gift Cards category
+      const giftCardProducts = (data || []).filter(
+        (p: any) => p.category?.name === 'Gift Cards'
+      );
+      setProducts(giftCardProducts);
+      if (giftCardProducts.length > 0) {
+        setSelectedProduct(giftCardProducts[0]); // Select first by default
       }
     }
     setIsLoading(false);

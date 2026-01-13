@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Filter, X, ChevronDown, Heart, Eye, Sparkles, Loader2 } from 'lucide-react';
+import { ShoppingBag, Filter, X, ChevronDown, Heart, Eye, Sparkles, Loader2, Search } from 'lucide-react';
 import { useProducts, useCategories, ProductWithDetails } from '@/lib/hooks/use-products';
 import { useCart } from '@/lib/cart-context';
 import { useWishlist } from '@/lib/wishlist-context';
@@ -20,11 +21,37 @@ const formatPrice = (price: number) => {
   }).format(price);
 };
 
+// Wrapper component with Suspense for useSearchParams
 export default function ProductsPage() {
+  return (
+    <Suspense fallback={<ProductsLoading />}>
+      <ProductsContent />
+    </Suspense>
+  );
+}
+
+function ProductsLoading() {
+  return (
+    <div className="min-h-screen pt-24 pb-20 flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-terracotta" />
+    </div>
+  );
+}
+
+function ProductsContent() {
+  const searchParams = useSearchParams();
+  const urlSearchQuery = searchParams.get('search') || '';
+  
   const { categories } = useCategories();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState('All');
   const [sortBy, setSortBy] = useState('newest');
+  const [searchInput, setSearchInput] = useState(urlSearchQuery);
+  
+  // Sync search input with URL param on mount
+  useEffect(() => {
+    setSearchInput(urlSearchQuery);
+  }, [urlSearchQuery]);
   
   // Parse sort option to hook options
   const hookOptions = useMemo(() => {
@@ -34,12 +61,13 @@ export default function ProductsPage() {
       if (category) opts.categorySlug = category.slug;
     }
     
-    // Sort is handled client-side for now in this simple hook, 
-    // or we need to update hook to support detailed sorting.
-    // For now, let's fetch all (or filtered by category) and sort client-side 
-    // to match previous behavior if hook doesn't support generic sort.
+    // Add search query
+    if (searchInput.length > 0) {
+      opts.search = searchInput;
+    }
+    
     return opts;
-  }, [activeCategory, categories]);
+  }, [activeCategory, categories, searchInput]);
 
   const { products, isLoading, error } = useProducts(hookOptions);
 
@@ -77,12 +105,40 @@ export default function ProductsPage() {
       <section className="bg-white dark:bg-[var(--background)] py-12 md:py-16 border-b border-gray-100 dark:border-white/5">
         <div className="container-custom text-center">
           <h1 className="heading-xl text-text-dark mb-3">
-            Shop <span className="text-gradient">Handmade</span>
+            {searchInput ? (
+              <>Search: <span className="text-gradient">{searchInput}</span></>
+            ) : (
+              <>Shop <span className="text-gradient">Handmade</span></>
+            )}
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 max-w-lg mx-auto">
-            Browse our collection of unique, handcrafted treasures. 
-            Each piece is made with love by Neha Kumari.
+          <p className="text-gray-500 dark:text-gray-400 max-w-lg mx-auto mb-6">
+            {searchInput 
+              ? `Showing results for "${searchInput}"`
+              : 'Browse our collection of unique, handcrafted treasures. Each piece is made with love by Neha Kumari.'
+            }
           </p>
+          
+          {/* Search Box - Only show when user arrived via global search */}
+          {urlSearchQuery && (
+            <div className="max-w-md mx-auto relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Search products..."
+                className="w-full pl-12 pr-4 py-3 rounded-full border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[var(--background-alt)] text-text-dark focus:outline-none focus:ring-2 focus:ring-terracotta/20 focus:border-terracotta"
+              />
+              {searchInput && (
+                <button 
+                  onClick={() => setSearchInput('')}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 dark:hover:bg-white/10 rounded-full"
+                >
+                  <X className="w-4 h-4 text-gray-500" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
