@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Pencil, Trash2, Loader2, X, FolderTree } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { useToast } from '@/components/ui/Toast';
 
 interface Category {
   id: string;
@@ -17,6 +18,7 @@ interface Category {
 }
 
 export default function AdminCategoriesPage() {
+  const { showToast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -129,8 +131,8 @@ export default function AdminCategoriesPage() {
     } catch (err: any) {
       console.error('Error saving category:', err);
       // Attempt to show more specific error
-      const message = err?.message || err?.error_description || JSON.stringify(err);
-      alert(`Failed to save category: ${message}`);
+      const message = err?.message || err?.error_description || 'Unknown error';
+      showToast(`Failed to save category: ${message}`, 'error');
     } finally {
       setIsSaving(false);
     }
@@ -149,7 +151,7 @@ export default function AdminCategoriesPage() {
       fetchCategories();
     } catch (err) {
       console.error('Error deleting category:', err);
-      alert('Failed to delete category.');
+      showToast('Failed to delete category.', 'error');
     }
   };
 

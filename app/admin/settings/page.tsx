@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Save, Check, Store, Mail, MapPin, Phone, Globe, Share2, Database } from 'lucide-react';
 import { staggerContainer, fadeInUp } from '@/lib/animations';
+import { useToast } from '@/components/ui/Toast';
 
 export default function AdminSettingsPage() {
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState('store');
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -276,7 +278,7 @@ export default function AdminSettingsPage() {
                      if (!response.ok) throw new Error('Failed to seed');
                      setShowSuccess(true);
                    } catch (error) {
-                     alert('Error seeding database');
+                     showToast('Error seeding database', 'error');
                    } finally {
                      setIsSaving(false);
                      setTimeout(() => setShowSuccess(false), 2000);

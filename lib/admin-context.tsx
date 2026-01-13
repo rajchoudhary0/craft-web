@@ -36,17 +36,19 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          // Fetch role from profiles
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('role')
             .eq('id', session.user.id)
             .single();
 
-          if (profile?.role === 'admin') {
+          console.log('Admin check - Profile:', profile, 'Error:', profileError);
+
+          if (profile?.role === 'admin' || profile?.role === 'manager') {
             setUser({ ...session.user, role: profile.role });
           } else {
-            setUser(null); // Not an admin
+            console.log('User role is:', profile?.role, '- Not authorized for admin');
+            setUser(null); // Not an admin or manager
           }
         } else {
           setUser(null);
@@ -88,16 +90,23 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       if (error) return { error: error.message };
 
       if (data.user) {
-        // Check role
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', data.user.id)
           .single();
 
-        if (profileError || profile?.role !== 'admin') {
+        console.log('Login - Profile:', profile, 'Error:', profileError);
+
+        if (profileError) {
+          console.error('Profile fetch error:', profileError);
           await supabase.auth.signOut();
-          return { error: 'Unauthorized access. Admin privileges required.' };
+          return { error: 'Could not verify user role. Please try again.' };
+        }
+
+        if (profile?.role !== 'admin' && profile?.role !== 'manager') {
+          await supabase.auth.signOut();
+          return { error: 'Unauthorized access. Admin or manager privileges required.' };
         }
         
         // Success

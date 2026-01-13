@@ -5,9 +5,10 @@ import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, Package, ShoppingBag, Settings, 
-  LogOut, ChevronLeft, Users, Sparkles, Ticket, Gift, MessageSquare, FolderTree
+  LogOut, ChevronLeft, Users, Sparkles, Ticket, Gift, MessageSquare, FolderTree, UserCog
 } from 'lucide-react';
 import { AdminProvider, RequireAdmin, useAdmin } from '@/lib/admin-context';
+import { ToastProvider } from '@/components/ui/Toast';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/admin' },
@@ -18,6 +19,7 @@ const navItems = [
   { icon: MessageSquare, label: 'Reviews', href: '/admin/reviews' },
   { icon: Ticket, label: 'Coupons', href: '/admin/coupons' },
   { icon: Gift, label: 'Gift Cards', href: '/admin/gift-cards' },
+  { icon: UserCog, label: 'User Roles', href: '/admin/users' },
   { icon: Settings, label: 'Settings', href: '/admin/settings' },
 ];
 
@@ -130,9 +132,11 @@ export default function AdminLayout({
 }) {
   return (
     <AdminProvider>
-      <RequireAdmin>
-        <AdminLayoutContent>{children}</AdminLayoutContent>
-      </RequireAdmin>
+      <ToastProvider>
+        <RequireAdmin>
+          <AdminLayoutContent>{children}</AdminLayoutContent>
+        </RequireAdmin>
+      </ToastProvider>
     </AdminProvider>
   );
 }
