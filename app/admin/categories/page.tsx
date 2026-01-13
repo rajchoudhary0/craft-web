@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Pencil, Trash2, Loader2, X, FolderTree } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, X, FolderTree, ImageIcon, Upload } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
 
@@ -11,6 +11,7 @@ interface Category {
   name: string;
   slug: string;
   description: string | null;
+  image_url: string | null;
   is_active: boolean;
   is_featured?: boolean;
   sort_order: number;
@@ -27,12 +28,51 @@ export default function AdminCategoriesPage() {
     name: '',
     slug: '',
     description: '',
+    image_url: '',
     is_active: true,
     is_featured: false,
     sort_order: 0,
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const supabase = createClient();
+
+  // Handle image file upload
+  const handleImageUpload = async (file: File) => {
+    if (!file) return;
+    
+    setIsUploading(true);
+    try {
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `category-${Date.now()}.${fileExt}`;
+      const filePath = `categories/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+
+      // Update form with the URL
+      setFormData(prev => ({ ...prev, image_url: urlData.publicUrl }));
+      showToast('Image uploaded successfully!', 'success');
+    } catch (err: any) {
+      console.error('Upload error:', err);
+      showToast(`Upload failed: ${err.message || 'Unknown error'}`, 'error');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   // Fetch categories
   useEffect(() => {
@@ -70,6 +110,7 @@ export default function AdminCategoriesPage() {
         name: category.name,
         slug: category.slug,
         description: category.description || '',
+        image_url: category.image_url || '',
         is_active: category.is_active,
         is_featured: category.is_featured || false,
         sort_order: category.sort_order,
@@ -80,6 +121,7 @@ export default function AdminCategoriesPage() {
         name: '',
         slug: '',
         description: '',
+        image_url: '',
         is_active: true,
         is_featured: false,
         sort_order: categories.length,
@@ -104,6 +146,7 @@ export default function AdminCategoriesPage() {
         name: formData.name,
         slug,
         description: formData.description || null,
+        image_url: formData.image_url || null,
         is_active: formData.is_active,
         is_featured: formData.is_featured,
         sort_order: formData.sort_order,
@@ -317,6 +360,71 @@ export default function AdminCategoriesPage() {
                     rows={2}
                     className="w-full px-4 py-2.5 border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta resize-none"
                     placeholder="Optional description..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-text-dark mb-1.5">
+                    <ImageIcon className="w-4 h-4 inline mr-1" />
+                    Category Image
+                  </label>
+                  
+                  {/* Image Preview */}
+                  {formData.image_url ? (
+                    <div className="mb-3 relative w-full h-32 rounded-xl overflow-hidden bg-sand/50 group">
+                      <img 
+                        src={formData.image_url} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x300?text=Invalid+URL'; }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, image_url: '' })}
+                        className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-clay/30 rounded-xl cursor-pointer hover:border-terracotta hover:bg-sand/20 transition-colors mb-3">
+                      {isUploading ? (
+                        <div className="flex flex-col items-center">
+                          <Loader2 className="w-8 h-8 animate-spin text-terracotta mb-2" />
+                          <span className="text-sm text-text-muted">Uploading...</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center">
+                          <Upload className="w-8 h-8 text-text-muted mb-2" />
+                          <span className="text-sm font-medium text-text-dark">Click to upload</span>
+                          <span className="text-xs text-text-muted mt-1">PNG, JPG up to 5MB</span>
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={isUploading}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleImageUpload(file);
+                        }}
+                      />
+                    </label>
+                  )}
+                  
+                  {/* Or use URL */}
+                  <div className="flex items-center gap-2 text-xs text-text-muted mb-2">
+                    <div className="flex-1 h-px bg-clay/20"></div>
+                    <span>or paste URL</span>
+                    <div className="flex-1 h-px bg-clay/20"></div>
+                  </div>
+                  <input
+                    type="url"
+                    value={formData.image_url}
+                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                    className="w-full px-4 py-2 text-sm border border-clay/20 rounded-lg focus:outline-none focus:border-terracotta"
+                    placeholder="https://example.com/image.jpg"
                   />
                 </div>
 
