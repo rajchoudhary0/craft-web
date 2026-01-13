@@ -38,6 +38,8 @@ export default function AdminProductsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [sortBy, setSortBy] = useState('newest');
+  const [filterType, setFilterType] = useState('all'); // 'all', 'featured', 'new', 'both', 'neither'
+  const [filterStatus, setFilterStatus] = useState('all'); // 'all', 'active', 'draft'
   const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   
@@ -90,7 +92,18 @@ export default function AdminProductsPage() {
       .filter(product => {
         const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesCategory = selectedCategory === 'All' || product.category?.name === selectedCategory;
-        return matchesSearch && matchesCategory;
+        
+        // Combined Type filter logic
+        let matchesType = true;
+        if (filterType === 'featured') matchesType = product.is_featured;
+        else if (filterType === 'new') matchesType = product.is_new;
+        else if (filterType === 'both') matchesType = product.is_featured && product.is_new;
+        else if (filterType === 'neither') matchesType = !product.is_featured && !product.is_new;
+        
+        const matchesStatus = filterStatus === 'all' ||
+          (filterStatus === 'active' && product.is_active) ||
+          (filterStatus === 'draft' && !product.is_active);
+        return matchesSearch && matchesCategory && matchesType && matchesStatus;
       })
       .sort((a, b) => {
         switch (sortBy) {
@@ -101,7 +114,7 @@ export default function AdminProductsPage() {
           default: return 0;
         }
       });
-  }, [products, searchQuery, selectedCategory, sortBy]);
+  }, [products, searchQuery, selectedCategory, sortBy, filterType, filterStatus]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredProducts.length / pageSize);
@@ -113,7 +126,7 @@ export default function AdminProductsPage() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCategory, sortBy, pageSize]);
+  }, [searchQuery, selectedCategory, sortBy, pageSize, filterType, filterStatus]);
 
   // Selection handlers
   const toggleSelectAll = () => {
@@ -185,9 +198,16 @@ export default function AdminProductsPage() {
   const getTagBadge = (tag: string) => {
     switch (tag) {
       case 'best-seller': return 'bg-terracotta/10 text-terracotta';
-      case 'new': return 'bg-sage/10 text-sage-dark';
+      case 'new': return 'bg-blue-100 text-blue-700'; // Different color for "new product" tag
       case 'limited-edition': return 'bg-gold/10 text-gold-dark';
       default: return 'bg-clay/10 text-text-muted';
+    }
+  };
+
+  const getTagLabel = (tag: string) => {
+    switch (tag) {
+      case 'new': return 'New Product'; // Rename "new" tag to "New Product"
+      default: return tag;
     }
   };
 
@@ -260,8 +280,8 @@ export default function AdminProductsPage() {
       </AnimatePresence>
 
       {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1 relative">
+      <div className="flex flex-col md:flex-row gap-4 flex-wrap">
+        <div className="flex-1 relative min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
           <input
             type="text"
@@ -280,6 +300,26 @@ export default function AdminProductsPage() {
           {categories.map(cat => (
             <option key={cat.id} value={cat.name}>{cat.name}</option>
           ))}
+        </select>
+        <select
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value)}
+          className="px-4 py-2.5 bg-cream border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta"
+        >
+          <option value="all">All Types</option>
+          <option value="featured">Featured Only</option>
+          <option value="new">New Arrivals Only</option>
+          <option value="both">Featured & New</option>
+          <option value="neither">Neither</option>
+        </select>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="px-4 py-2.5 bg-cream border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta"
+        >
+          <option value="all">All Status</option>
+          <option value="active">Active Only</option>
+          <option value="draft">Draft Only</option>
         </select>
         <select
           value={sortBy}
@@ -356,10 +396,22 @@ export default function AdminProductsPage() {
                           </div>
                           <div>
                             <p className="font-medium text-text-dark">{product.name}</p>
-                            <div className="flex gap-1 mt-1">
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {/* Featured & New badges */}
+                              {product.is_featured && (
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-terracotta/20 text-terracotta font-medium">
+                                  Featured
+                                </span>
+                              )}
+                              {product.is_new && (
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-sage/20 text-sage-dark font-medium">
+                                  New Arrival
+                                </span>
+                              )}
+                              {/* Existing tags */}
                               {product.tags?.slice(0, 2).map((t, i) => (
                                 <span key={i} className={`text-xs px-2 py-0.5 rounded-full ${getTagBadge(t.tag?.name || '')}`}>
-                                  {t.tag?.name}
+                                  {getTagLabel(t.tag?.name || '')}
                                 </span>
                               ))}
                             </div>

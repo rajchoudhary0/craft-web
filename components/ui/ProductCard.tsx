@@ -98,7 +98,8 @@ export default function ProductCard({ product }: ProductCardProps) {
     <motion.article
       className="group h-full"
       variants={fadeInUp}
-      layout
+      initial="initial"
+      animate="animate"
     >
       <div className="h-full bg-white dark:bg-[var(--background-alt)] rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/10 hover:shadow-xl hover:border-gray-200 dark:hover:border-white/20 transition-all duration-300 flex flex-col">
         

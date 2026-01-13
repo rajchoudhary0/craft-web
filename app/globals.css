@@ -451,3 +451,6 @@ body {
 .scrollbar-sleek::-webkit-scrollbar-thumb:hover {
   background: #b8533a;
 }
+.cat-name {
+  color: var(--background);
+}

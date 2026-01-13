@@ -41,6 +41,7 @@ function ProductsLoading() {
 function ProductsContent() {
   const searchParams = useSearchParams();
   const urlSearchQuery = searchParams.get('search') || '';
+  const urlCategorySlug = searchParams.get('category') || '';
   
   const { categories } = useCategories();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -48,15 +49,30 @@ function ProductsContent() {
   const [sortBy, setSortBy] = useState('newest');
   const [searchInput, setSearchInput] = useState(urlSearchQuery);
   
-  // Sync search input with URL param on mount
+  // Sync inputs with URL params on mount/update
   useEffect(() => {
     setSearchInput(urlSearchQuery);
-  }, [urlSearchQuery]);
+    
+    // If we have a category slug in URL and categories are loaded, set the active category
+    if (urlCategorySlug && categories.length > 0) {
+      const category = categories.find(c => c.slug === urlCategorySlug);
+      if (category) {
+        setActiveCategory(category.name);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlSearchQuery, urlCategorySlug, categories.length]);
   
   // Parse sort option to hook options
   const hookOptions = useMemo(() => {
     const opts: any = {};
-    if (activeCategory !== 'All') {
+    
+    // Prioritize URL category slug for fetching
+    if (urlCategorySlug) {
+      opts.categorySlug = urlCategorySlug;
+    } 
+    // Fallback to activeCategory state (for when user clicks pills)
+    else if (activeCategory !== 'All') {
       const category = categories.find(c => c.name === activeCategory);
       if (category) opts.categorySlug = category.slug;
     }
@@ -67,7 +83,7 @@ function ProductsContent() {
     }
     
     return opts;
-  }, [activeCategory, categories, searchInput]);
+  }, [activeCategory, categories, searchInput, urlCategorySlug]);
 
   const { products, isLoading, error } = useProducts(hookOptions);
 
@@ -228,18 +244,13 @@ function ProductsContent() {
 
         {/* Products Grid */}
         {!isLoading && !error && (
-          <motion.div
+          <div
             className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
-            initial="initial"
-            animate="animate"
-            variants={staggerContainer}
           >
-            <AnimatePresence mode="popLayout">
             {sortedProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
-            </AnimatePresence>
-          </motion.div>
+          </div>
         )}
 
         {/* Empty State */}

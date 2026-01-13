@@ -11,6 +11,7 @@ interface Category {
   slug: string;
   description: string | null;
   is_active: boolean;
+  is_featured?: boolean;
   sort_order: number;
   created_at: string;
 }
@@ -25,6 +26,7 @@ export default function AdminCategoriesPage() {
     slug: '',
     description: '',
     is_active: true,
+    is_featured: false,
     sort_order: 0,
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -67,6 +69,7 @@ export default function AdminCategoriesPage() {
         slug: category.slug,
         description: category.description || '',
         is_active: category.is_active,
+        is_featured: category.is_featured || false,
         sort_order: category.sort_order,
       });
     } else {
@@ -76,6 +79,7 @@ export default function AdminCategoriesPage() {
         slug: '',
         description: '',
         is_active: true,
+        is_featured: false,
         sort_order: categories.length,
       });
     }
@@ -94,17 +98,20 @@ export default function AdminCategoriesPage() {
     try {
       const slug = formData.slug || generateSlug(formData.name);
 
+      const payload = {
+        name: formData.name,
+        slug,
+        description: formData.description || null,
+        is_active: formData.is_active,
+        is_featured: formData.is_featured,
+        sort_order: formData.sort_order,
+      };
+
       if (editingCategory) {
         // Update
         const { error } = await supabase
           .from('categories')
-          .update({
-            name: formData.name,
-            slug,
-            description: formData.description || null,
-            is_active: formData.is_active,
-            sort_order: formData.sort_order,
-          })
+          .update(payload)
           .eq('id', editingCategory.id);
 
         if (error) throw error;
@@ -112,22 +119,18 @@ export default function AdminCategoriesPage() {
         // Create
         const { error } = await supabase
           .from('categories')
-          .insert({
-            name: formData.name,
-            slug,
-            description: formData.description || null,
-            is_active: formData.is_active,
-            sort_order: formData.sort_order,
-          });
+          .insert(payload);
 
         if (error) throw error;
       }
 
       closeModal();
       fetchCategories();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving category:', err);
-      alert('Failed to save category. Check console for details.');
+      // Attempt to show more specific error
+      const message = err?.message || err?.error_description || JSON.stringify(err);
+      alert(`Failed to save category: ${message}`);
     } finally {
       setIsSaving(false);
     }
@@ -197,7 +200,12 @@ export default function AdminCategoriesPage() {
                         <FolderTree className="w-5 h-5 text-terracotta" />
                       </div>
                       <div>
-                        <p className="font-medium text-text-dark">{cat.name}</p>
+                        <div className="flex items-center gap-2">
+                           <p className="font-medium text-text-dark">{cat.name}</p>
+                           {cat.is_featured && (
+                             <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] uppercase font-bold rounded">Featured</span>
+                           )}
+                        </div>
                         {cat.description && (
                           <p className="text-xs text-text-muted truncate max-w-[200px]">{cat.description}</p>
                         )}
@@ -320,15 +328,27 @@ export default function AdminCategoriesPage() {
                       className="w-full px-4 py-2.5 border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta"
                     />
                   </div>
-                  <div className="flex items-center gap-2 pt-6">
-                    <input
-                      type="checkbox"
-                      id="is_active"
-                      checked={formData.is_active}
-                      onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                      className="w-4 h-4 rounded border-clay/20 text-terracotta focus:ring-terracotta"
-                    />
-                    <label htmlFor="is_active" className="text-sm text-text-dark">Active</label>
+                  <div className="flex flex-col gap-2 pt-6">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="is_active"
+                        checked={formData.is_active}
+                        onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                        className="w-4 h-4 rounded border-clay/20 text-terracotta focus:ring-terracotta"
+                      />
+                      <label htmlFor="is_active" className="text-sm text-text-dark">Active</label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="is_featured"
+                        checked={formData.is_featured}
+                        onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                        className="w-4 h-4 rounded border-clay/20 text-terracotta focus:ring-terracotta"
+                      />
+                      <label htmlFor="is_featured" className="text-sm text-text-dark font-medium text-amber-700">Featured</label>
+                    </div>
                   </div>
                 </div>
               </div>
