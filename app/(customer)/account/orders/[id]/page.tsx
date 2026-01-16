@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useOrder } from '@/lib/hooks/use-orders';
 import { useAuth } from '@/lib/auth-context';
-import { ChevronLeft, Package, MapPin, CreditCard, Calendar, Clock, AlertCircle, X, Loader2 } from 'lucide-react';
+import { ChevronLeft, Package, MapPin, CreditCard, Calendar, Clock, AlertCircle, X, Loader2, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -138,9 +138,9 @@ export default function OrderDetailsPage() {
                             <Link 
                                 key={item.id} 
                                 href={item.product_id ? `/products/${item.product_id}` : '#'}
-                                className={`flex gap-4 group ${!item.product_id ? 'pointer-events-none' : ''}`}
+                                className={`flex gap-4 group ${!item.product_id ? 'pointer-events-none' : ''} p-2 -mx-2 rounded-xl hover:bg-sand/30 transition-colors`}
                             >
-                                <div className="relative w-20 h-20 bg-sand rounded-xl overflow-hidden flex-shrink-0 group-hover:opacity-90 transition-opacity">
+                                <div className="relative w-20 h-20 bg-sand rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
                                     {(item.product?.images?.[0] || false) ? (
                                         <Image 
                                             src={typeof item.product!.images![0] === 'string' ? item.product!.images![0] : ((item.product!.images![0] as any).image_url || '')} 
@@ -154,9 +154,10 @@ export default function OrderDetailsPage() {
                                         </div>
                                     )}
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-medium text-text-dark mb-1 group-hover:text-terracotta transition-colors truncate">
+                                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                    <h3 className="font-medium text-text-dark mb-1 group-hover:text-terracotta transition-colors truncate flex items-center gap-2">
                                         {item.product?.name || item.product_name || 'Unknown Product'}
+                                        <ExternalLink className="w-3.5 h-3.5 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 text-terracotta" />
                                     </h3>
                                     <p className="text-sm text-text-muted mb-1">Qty: {item.quantity}</p>
                                     <p className="font-medium text-terracotta">{formatPrice(item.price_at_purchase)}</p>
@@ -232,7 +233,7 @@ export default function OrderDetailsPage() {
                     </div>
                     <div className="mt-4 pt-4 border-t border-clay/10 text-xs text-text-muted flex justify-between">
                          <span>Payment Method</span>
-                         <span className="font-medium text-text-dark">Razorpay</span>
+                         <span className="font-medium text-text-dark">Date</span>
                     </div>
                 </div>
 
