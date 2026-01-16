@@ -53,7 +53,7 @@ export default function AdminGiftCardsPage() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching gift cards:', error);
+      // Error fetching gift cards
     } else {
       setCards(data || []);
     }

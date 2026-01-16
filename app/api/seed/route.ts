@@ -69,7 +69,7 @@ export async function POST() {
         .single();
 
       if (productError) {
-        console.error('Error inserting product:', p.name, productError);
+        // Error inserting product (skipped)
         continue;
       }
 
@@ -124,7 +124,7 @@ export async function POST() {
 
     return NextResponse.json({ success: true, message: 'Database seeded successfully' });
   } catch (err: any) {
-    console.error('Seed error:', err);
+    // Seed error
     return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -67,7 +67,7 @@ export default function AdminCategoriesPage() {
       setFormData(prev => ({ ...prev, image_url: urlData.publicUrl }));
       showToast('Image uploaded successfully!', 'success');
     } catch (err: any) {
-      console.error('Upload error:', err);
+      // Upload error handled
       showToast(`Upload failed: ${err.message || 'Unknown error'}`, 'error');
     } finally {
       setIsUploading(false);
@@ -90,7 +90,7 @@ export default function AdminCategoriesPage() {
       if (error) throw error;
       setCategories(data || []);
     } catch (err) {
-      console.error('Error fetching categories:', err);
+      // Error fetching categories
     } finally {
       setIsLoading(false);
     }
@@ -172,7 +172,7 @@ export default function AdminCategoriesPage() {
       closeModal();
       fetchCategories();
     } catch (err: any) {
-      console.error('Error saving category:', err);
+      // Error saving category
       // Attempt to show more specific error
       const message = err?.message || err?.error_description || 'Unknown error';
       showToast(`Failed to save category: ${message}`, 'error');
@@ -193,7 +193,7 @@ export default function AdminCategoriesPage() {
       if (error) throw error;
       fetchCategories();
     } catch (err) {
-      console.error('Error deleting category:', err);
+      // Error deleting category
       showToast('Failed to delete category.', 'error');
     }
   };

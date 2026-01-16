@@ -56,7 +56,7 @@ export default function AdminCouponsPage() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching coupons:', error);
+      // Error fetching coupons
     } else {
       setCoupons(data || []);
     }

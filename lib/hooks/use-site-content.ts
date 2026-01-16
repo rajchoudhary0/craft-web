@@ -31,7 +31,7 @@ export function useSiteContent(key: string) {
 
         setContent(data?.value || null);
       } catch (err: any) {
-        console.error('Error fetching site content:', err);
+        // Error fetching site content
         setError(err.message);
       } finally {
         setIsLoading(false);
@@ -66,7 +66,7 @@ export function useUpdateSiteContent() {
 
       return true;
     } catch (err: any) {
-      console.error('Error updating site content:', err);
+      // Error updating site content
       setError(err.message);
       return false;
     } finally {
@@ -107,7 +107,7 @@ export function useNewsletter() {
         setSuccess(true);
       }
     } catch (err: any) {
-      console.error('Error subscribing:', err);
+      // Error subscribing
       setError(err.message);
     } finally {
       setIsSubscribing(false);

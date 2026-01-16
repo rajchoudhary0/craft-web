@@ -49,7 +49,7 @@ export default function GiftCardsPage() {
       .order('price', { ascending: true });
 
     if (error) {
-      console.error('Error fetching gift cards:', error);
+      // Error fetching gift cards
     } else {
       // Filter for Gift Cards category
       const giftCardProducts = (data || []).filter(

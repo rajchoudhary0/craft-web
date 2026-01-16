@@ -49,13 +49,13 @@ export default function AdminCustomersPage() {
       .select('id, email, full_name, created_at');
 
     if (error) {
-      console.error('Error fetching customers:', JSON.stringify(error, null, 2));
+      // Error fetching customers
       setIsLoading(false);
       return;
     }
 
     if (!profiles) {
-      console.warn('No profiles found');
+      // No profiles found
       setIsLoading(false);
       return;
     }

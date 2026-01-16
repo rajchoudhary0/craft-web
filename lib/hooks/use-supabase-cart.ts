@@ -75,7 +75,7 @@ export function useSupabaseCart(): UseSupabaseCartReturn {
 
       setItems((cartItems || []).filter((item: any) => item.product) as CartItemWithProduct[]);
     } catch (err: any) {
-      console.error('Error fetching cart:', err);
+      // Error fetching cart
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -122,7 +122,7 @@ export function useSupabaseCart(): UseSupabaseCartReturn {
 
       fetchCart();
     } catch (err: any) {
-      console.error('Error adding to cart:', err);
+      // Error adding to cart
       setError(err.message);
     }
   };
@@ -143,7 +143,7 @@ export function useSupabaseCart(): UseSupabaseCartReturn {
 
       fetchCart();
     } catch (err: any) {
-      console.error('Error updating quantity:', err);
+      // Error updating quantity
       setError(err.message);
     }
   };
@@ -159,7 +159,7 @@ export function useSupabaseCart(): UseSupabaseCartReturn {
 
       fetchCart();
     } catch (err: any) {
-      console.error('Error removing item:', err);
+      // Error removing item
       setError(err.message);
     }
   };
@@ -183,7 +183,7 @@ export function useSupabaseCart(): UseSupabaseCartReturn {
 
       setItems([]);
     } catch (err: any) {
-      console.error('Error clearing cart:', err);
+      // Error clearing cart
       setError(err.message);
     }
   };

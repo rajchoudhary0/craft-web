@@ -454,3 +454,96 @@ body {
 .cat-name {
   color: var(--background);
 }
+/* ==========================================
+   STANDARDIZED FORM & BUTTON UTILITIES  
+   ========================================== */
+
+/* Consistent border-radius design tokens */
+:root {
+  --radius-sm: 0.5rem;
+  /* 8px - small buttons, tags */
+  --radius-md: 0.75rem;
+  /* 12px - inputs, cards */
+  --radius-lg: 1rem;
+  /* 16px - modals, large cards */
+  --radius-xl: 1.5rem;
+  /* 24px - sections */
+  --radius-full: 9999px;
+  /* Pill-shaped buttons */
+}
+
+/* Standard form input styling */
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--sand);
+  border: 1px solid var(--clay);
+  border-radius: var(--radius-md);
+  color: var(--text-dark);
+  font-size: 1rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--terracotta);
+  box-shadow: 0 0 0 3px rgba(201, 123, 92, 0.15);
+}
+
+.form-input::placeholder {
+  color: var(--text-light);
+}
+
+[data-theme="dark"] .form-input {
+  background: var(--clay);
+  border-color: var(--stone);
+}
+
+/* Standard button base (use alongside Tailwind) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  border-radius: var(--radius-full);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--terracotta);
+  color: var(--cream);
+}
+
+.btn-primary:hover {
+  background: var(--terracotta-dark);
+}
+
+.btn-secondary {
+  background: var(--sage);
+  color: var(--cream);
+}
+
+.btn-secondary:hover {
+  background: var(--sage-dark);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--terracotta);
+  color: var(--terracotta);
+}
+
+.btn-outline:hover {
+  background: var(--terracotta);
+  color: var(--cream);
+}
+
+/* Disabled state */
+.btn:disabled,
+.form-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

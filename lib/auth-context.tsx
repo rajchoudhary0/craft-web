@@ -39,14 +39,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error) {
           // Handle invalid refresh token error gracefully
           if (error.message?.includes('Refresh Token')) {
-            console.warn('Session expired, signing out...');
+            // Session expired, signing out silently
             await supabase.auth.signOut();
           }
         }
         setSession(session);
         setUser(session?.user ?? null);
       } catch (err) {
-        console.error('Error getting session:', err);
+        // Error getting session - handled silently
       } finally {
         setIsLoading(false);
       }

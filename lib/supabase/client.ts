@@ -13,7 +13,7 @@ export function createClient() {
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
     if (!url || !key) {
-        console.warn('Supabase URL or Key is missing. Auth will be disabled.');
+        // Supabase URL or Key is missing - auth will be disabled
         supabaseInstance = undefined;
         return undefined;
     }

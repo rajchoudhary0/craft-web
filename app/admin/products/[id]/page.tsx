@@ -164,7 +164,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           .single();
 
         if (insertError) {
-          console.error('Insert error details:', insertError);
+          // Insert error - check if tables exist
           throw new Error(insertError.message || insertError.details || 'Failed to create product. Check if database tables exist.');
         }
         if (!newProduct) {
@@ -179,17 +179,17 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           .eq('id', productId);
 
         if (updateError) {
-          console.error('Update error details:', updateError);
+          // Update error
           throw new Error(updateError.message || updateError.details || 'Failed to update product');
         }
 
         // Delete existing images
         const { error: deleteImgError } = await supabase.from('product_images').delete().eq('product_id', productId);
-        if (deleteImgError) console.warn('Delete images error:', deleteImgError);
+        // Delete images error (non-critical)
         
         // Delete existing tags
         const { error: deleteTagError } = await supabase.from('product_tags').delete().eq('product_id', productId);
-        if (deleteTagError) console.warn('Delete tags error:', deleteTagError);
+        // Delete tags error (non-critical)
       }
 
       // Insert images
@@ -202,7 +202,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           is_primary: idx === 0,
         }));
         const { error: imgError } = await supabase.from('product_images').insert(imagesToInsert);
-        if (imgError) console.warn('Insert images error:', imgError);
+        // Insert images error (non-critical)
       }
 
       // Insert tags (skip if tables don't exist)
@@ -235,7 +235,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             });
           }
         } catch (tagErr) {
-          console.warn('Tag error (non-critical):', tagErr);
+          // Tag error (non-critical)
         }
       }
 
@@ -245,7 +245,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         router.push('/admin/products');
       }, 1500);
     } catch (err: any) {
-      console.error('Error saving product:', err);
+      // Error saving product
       const errorMessage = err?.message || err?.error?.message || JSON.stringify(err) || 'Failed to save product. Please run migration SQL first.';
       setError(errorMessage);
     } finally {
@@ -473,7 +473,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                       };
                       reader.readAsDataURL(processedFile);
                     } catch (err) {
-                      console.error('Image processing error:', err);
+                      // Image processing error
                       setError('Failed to process image. Try a different format.');
                       setIsConverting(false);
                     }

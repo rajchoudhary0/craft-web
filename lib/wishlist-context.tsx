@@ -53,7 +53,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         setItems(getLocalWishlist());
       }
     } catch (error) {
-      console.error('Error loading wishlist:', error);
+      // Error loading wishlist - fallback to local
       // Fallback to local storage on error
       setItems(getLocalWishlist());
     } finally {
@@ -150,7 +150,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
           tags: item.product.tags?.map((t: any) => t.tag?.name).filter(Boolean) || [],
         }));
     } catch (error) {
-      console.error('Error fetching server wishlist:', error);
+      // Error fetching server wishlist
       return [];
     }
   };
@@ -214,7 +214,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         .update({ updated_at: new Date().toISOString() })
         .eq('id', wishlistData.id);
     } catch (error) {
-      console.error('Error syncing wishlist to server:', error);
+      // Error syncing wishlist to server
       // Save to localStorage as backup
       saveLocalWishlist(wishlistItems);
     }

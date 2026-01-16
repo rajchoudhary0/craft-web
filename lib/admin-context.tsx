@@ -42,19 +42,19 @@ export function AdminProvider({ children }: { children: ReactNode }) {
             .eq('id', session.user.id)
             .single();
 
-          console.log('Admin check - Profile:', profile, 'Error:', profileError);
+
 
           if (profile?.role === 'admin' || profile?.role === 'manager') {
             setUser({ ...session.user, role: profile.role });
           } else {
-            console.log('User role is:', profile?.role, '- Not authorized for admin');
+            // Not authorized for admin
             setUser(null); // Not an admin or manager
           }
         } else {
           setUser(null);
         }
       } catch (error) {
-        console.error('Admin check error:', error);
+        // Admin check failed silently
         setUser(null);
       } finally {
         setIsLoading(false);
@@ -96,10 +96,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
           .eq('id', data.user.id)
           .single();
 
-        console.log('Login - Profile:', profile, 'Error:', profileError);
+
 
         if (profileError) {
-          console.error('Profile fetch error:', profileError);
+          // Profile fetch failed
           await supabase.auth.signOut();
           return { error: 'Could not verify user role. Please try again.' };
         }

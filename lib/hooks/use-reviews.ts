@@ -102,7 +102,7 @@ export function useProductReviews(productId: string) {
         });
       }
     } catch (err) {
-      console.error('Error fetching reviews:', err);
+      // Error fetching reviews
       setError('Failed to load reviews');
     } finally {
       setIsLoading(false);
@@ -138,7 +138,7 @@ export function useCanReview(productId: string) {
         if (error) throw error;
         setCanReview(data === true);
       } catch (err) {
-        console.error('Error checking review eligibility:', err);
+        // Error checking review eligibility
         setCanReview(false);
       } finally {
         setIsLoading(false);
@@ -195,7 +195,7 @@ export function useSubmitReview() {
 
       return true;
     } catch (err) {
-      console.error('Error submitting review:', err);
+      // Error submitting review
       setError('Failed to submit review. Please try again.');
       return false;
     } finally {
@@ -262,7 +262,7 @@ export function useAdminReviews() {
 
       setReviews(enrichedReviews);
     } catch (err) {
-      console.error('Error fetching admin reviews:', err);
+      // Error fetching admin reviews
       setError('Failed to load reviews');
     } finally {
       setIsLoading(false);
@@ -282,7 +282,7 @@ export function useAdminReviews() {
       await fetchReviews();
       return true;
     } catch (err) {
-      console.error('Error approving review:', err);
+      // Error approving review
       return false;
     }
   };
@@ -300,7 +300,7 @@ export function useAdminReviews() {
       await fetchReviews();
       return true;
     } catch (err) {
-      console.error('Error rejecting review:', err);
+      // Error rejecting review
       return false;
     }
   };
@@ -318,7 +318,7 @@ export function useAdminReviews() {
       await fetchReviews();
       return true;
     } catch (err) {
-      console.error('Error deleting review:', err);
+      // Error deleting review
       return false;
     }
   };
@@ -370,7 +370,7 @@ export function useAdminReviews() {
       if (error) {
         // Check if it's a missing column or NOT NULL constraint error
         if (error.message?.includes('reviewer_name') || error.message?.includes('user_id')) {
-          console.error('Migration required. Please run lib/supabase/add_reviewer_name.sql');
+          // Migration required for reviewer_name column
           throw new Error('Database migration required. Run lib/supabase/add_reviewer_name.sql in Supabase SQL Editor.');
         }
         throw error;
@@ -380,7 +380,7 @@ export function useAdminReviews() {
       return true;
     } catch (err: unknown) {
       const error = err as { message?: string; code?: string; details?: string };
-      console.error('Error creating review:', error.message || error.code || err);
+      // Error creating review
       return false;
     }
   };

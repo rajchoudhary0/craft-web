@@ -63,7 +63,7 @@ export default function AccountPage() {
         }));
       }
     } catch (error) {
-      console.error('Error fetching pincode details:', error);
+      // Pincode lookup error handled silently
     } finally {
       setAddressLoading(false);
     }
@@ -170,7 +170,7 @@ export default function AccountPage() {
       setSuccessMessage(editingAddressId ? 'Address updated successfully!' : 'Address saved successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
-      console.error('Error saving address:', error);
+      // Error saving address handled silently
       // Fallback for error handling (could also be a state message)
       alert('Failed to save address. Please try again.');
     } finally {
@@ -680,7 +680,7 @@ export default function AccountPage() {
                       setProfileMessage({ type: 'success', text: 'Profile updated successfully!' });
                       setTimeout(() => setProfileMessage(null), 3000);
                     } catch (error: any) {
-                      console.error('Error updating profile:', error, JSON.stringify(error));
+                      // Error updating profile logged to state
                       let errorMessage = error.message || 'Failed to update profile.';
                       
                       // Check for missing column error (Postgres code 42703)

@@ -58,7 +58,7 @@ export function useOrders(): UseOrdersReturn {
     } catch (err: any) {
       // Only log actual errors, not empty results
       if (err?.message) {
-        console.error('Error fetching orders:', err.message);
+        // Error fetching orders
         setError(err.message);
       }
       setOrders([]);
@@ -106,7 +106,7 @@ export function useOrder(orderId: string) {
 
         setOrder(data as OrderWithDetails);
       } catch (err: any) {
-        console.error('Error fetching order:', err);
+        // Error fetching order
         setError(err.message);
       } finally {
         setIsLoading(false);
@@ -155,7 +155,7 @@ export function useAdminOrders(status?: string) {
 
       setOrders((data || []) as OrderWithDetails[]);
     } catch (err: any) {
-      console.error('Error fetching admin orders:', err);
+      // Error fetching admin orders
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -177,7 +177,7 @@ export function useAdminOrders(status?: string) {
 
       fetchOrders();
     } catch (err: any) {
-      console.error('Error updating order:', err);
+      // Error updating order
       setError(err.message);
     }
   };

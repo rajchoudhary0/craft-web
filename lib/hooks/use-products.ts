@@ -173,7 +173,7 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsReturn
 
       setProducts(productsWithTags);
     } catch (err: any) {
-      console.error('Error fetching products:', err);
+      // Error fetching products
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -238,7 +238,7 @@ export function useProduct(idOrSlug: string) {
           tags: (tagData || []).map((t: any) => t.tag).filter(Boolean),
         } as ProductWithDetails);
       } catch (err: any) {
-        console.error('Error fetching product:', err);
+        // Error fetching product
         setError(err.message);
       } finally {
         setIsLoading(false);
@@ -274,7 +274,7 @@ export function useCategories() {
         if (error) throw error;
         setCategories(data || []);
       } catch (err) {
-        console.error('Error fetching categories:', err);
+        // Error fetching categories
       } finally {
         setIsLoading(false);
       }

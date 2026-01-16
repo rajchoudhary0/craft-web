@@ -160,7 +160,7 @@ export default function Header() {
 
         setSearchResults(formattedResults);
       } catch (err) {
-        console.error('Search error:', err);
+        // Search error handled silently
         setSearchResults([]);
       } finally {
         setIsSearching(false);

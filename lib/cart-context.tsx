@@ -92,7 +92,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setItems(getLocalCart());
       }
     } catch (error) {
-      console.error('Error loading cart:', error);
+      // Error loading cart - fallback to local
       // Fallback to local storage on error
       setItems(getLocalCart());
     } finally {
@@ -202,7 +202,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         quantity: item.quantity,
       }));
     } catch (error) {
-      console.error('Error fetching server cart:', error);
+      // Error fetching server cart
       return [];
     }
   };
@@ -276,7 +276,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         .update({ updated_at: new Date().toISOString() })
         .eq('id', cartData.id);
     } catch (error) {
-      console.error('Error syncing cart to server:', error);
+      // Error syncing cart to server
       // Save to localStorage as backup
       saveLocalCart(cartItems);
     }
@@ -333,7 +333,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
 
     if (error) {
-      console.error('Gift card error:', error);
+      // Gift card error handled
       return { success: false, message: 'Error validating gift card' };
     }
 
@@ -429,7 +429,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
 
     if (error) {
-      console.error('Coupon validation error:', error);
+      // Coupon validation error
       return { success: false, message: 'Error validating coupon' };
     }
 
