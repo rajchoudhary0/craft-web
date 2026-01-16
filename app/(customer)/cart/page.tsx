@@ -407,15 +407,16 @@ export default function CartPage() {
                 <span className="text-terracotta">{formatPrice(finalPrice)}</span>
               </div>
 
-              <Button 
-                variant="primary" 
-                size="lg" 
-                className="w-full mb-4"
-                rightIcon={<ArrowRight className="w-5 h-5" />}
-                onClick={() => alert(`Proceeding to checkout with total: ${formatPrice(finalPrice)}`)}
-              >
-                Checkout
-              </Button>
+              <Link href="/checkout" className="block">
+                <Button 
+                  variant="primary" 
+                  size="lg" 
+                  className="w-full mb-4"
+                  rightIcon={<ArrowRight className="w-5 h-5" />}
+                >
+                  Proceed to Checkout
+                </Button>
+              </Link>
 
               {/* Trust badges */}
               <div className="flex items-center justify-center gap-4 text-xs text-text-muted">

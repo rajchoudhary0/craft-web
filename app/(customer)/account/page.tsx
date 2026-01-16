@@ -364,9 +364,10 @@ export default function AccountPage() {
                   ) : (
                     <div className="space-y-4">
                       {orders.map((order) => (
-                        <div 
+                        <Link 
+                          href={`/account/orders/${order.id}`}
                           key={order.id} 
-                          className="border border-clay/10 rounded-xl p-4 hover:shadow-md transition-shadow"
+                          className="block border border-clay/10 rounded-xl p-4 hover:shadow-md transition-shadow group"
                         >
                           <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
                             <div>
@@ -392,7 +393,7 @@ export default function AccountPage() {
                             </span>
                             <ChevronRight className="w-4 h-4 text-text-muted ml-auto" />
                           </div>
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   )}

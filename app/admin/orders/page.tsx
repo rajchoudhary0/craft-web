@@ -20,10 +20,20 @@ interface Order {
   id: string;
   created_at: string;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  payment_status: 'pending' | 'paid' | 'refunded';
   total_amount: number;
+  discount_amount: number;
   user: { email: string } | null;
   items: OrderItem[];
+  razorpay_payment_id: string | null;
+  shipping_address: {
+    full_name: string;
+    address_line1: string;
+    address_line2: string | null;
+    city: string;
+    state: string;
+    postal_code: string;
+    phone: string;
+  } | null;
 }
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
@@ -70,13 +80,27 @@ export default function AdminOrdersPage() {
     const { data, error } = await supabase
       .from('orders')
       .select(`
-        id, created_at, status, payment_status, total_amount,
+        id, created_at, status, total_amount, discount_amount, razorpay_payment_id,
         user:profiles(email),
-        items:order_items(id, quantity, price_at_purchase, product:products(name, images:product_images(image_url)))
+        items:order_items(id, quantity, price_at_purchase, product:products(name, images:product_images(image_url))),
+        shipping_address:shipping_addresses(*)
       `)
       .order('created_at', { ascending: false });
 
-    if (data) setOrders(data as unknown as Order[]);
+    if (error) {
+      console.error('Error fetching orders:', error);
+    }
+
+    if (data) {
+      // Handle array vs object for shipping_address
+      const formattedOrders = data.map((order: any) => ({
+        ...order,
+        shipping_address: Array.isArray(order.shipping_address) 
+          ? order.shipping_address[0] || null 
+          : order.shipping_address
+      }));
+      setOrders(formattedOrders as Order[]);
+    }
     setIsLoading(false);
   };
 
@@ -166,7 +190,7 @@ export default function AdminOrdersPage() {
         new Date(o.created_at).toLocaleDateString(),
         o.total_amount,
         o.status,
-        o.payment_status
+        o.razorpay_payment_id ? 'Paid' : 'Pending'
       ].join(','))
     ].join('\n');
     
@@ -334,8 +358,10 @@ export default function AdminOrdersPage() {
                       </span>
                     </td>
                     <td className="p-4">
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${paymentStatusColors[order.payment_status] || ''}`}>
-                        {order.payment_status}
+                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                        order.razorpay_payment_id ? paymentStatusColors['paid'] : paymentStatusColors['pending']
+                      }`}>
+                        {order.razorpay_payment_id ? 'Paid' : 'Pending'}
                       </span>
                     </td>
                     <td className="p-4">
@@ -447,6 +473,23 @@ export default function AdminOrdersPage() {
                     <p className="font-medium text-text-dark">{formatDate(selectedOrder.created_at)}</p>
                   </div>
                 </div>
+
+                {selectedOrder.shipping_address && (
+                  <div className="bg-sand/20 p-4 rounded-xl border border-clay/10">
+                    <h4 className="text-sm font-medium text-text-muted mb-2 flex items-center gap-2">
+                       Shipping Address
+                    </h4>
+                    <div className="text-sm text-text-dark">
+                      <p className="font-medium">{selectedOrder.shipping_address.full_name}</p>
+                      <p>{selectedOrder.shipping_address.address_line1}</p>
+                      {selectedOrder.shipping_address.address_line2 && <p>{selectedOrder.shipping_address.address_line2}</p>}
+                      <p>
+                        {selectedOrder.shipping_address.city}, {selectedOrder.shipping_address.state} - {selectedOrder.shipping_address.postal_code}
+                      </p>
+                      <p className="mt-1 text-text-muted">{selectedOrder.shipping_address.phone}</p>
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-text-dark mb-2">Update Status</label>

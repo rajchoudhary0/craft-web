@@ -6,7 +6,9 @@ import { useAuth } from '@/lib/auth-context';
 import type { Order, OrderItem, ShippingAddress, Product } from '@/lib/supabase/types';
 
 export type OrderWithDetails = Order & {
-  items: (OrderItem & { product: Product | null })[];
+  items: (OrderItem & {
+    product: (Product & { images: { image_url: string }[] | null } | null)
+  })[];
   shipping_address: ShippingAddress | null;
 };
 
@@ -39,7 +41,7 @@ export function useOrders(): UseOrdersReturn {
         .from('orders')
         .select(`
           *,
-          items:order_items(*, product:products(*))
+          items:order_items(*, product:products(*, images:product_images(image_url)))
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -81,42 +83,47 @@ export function useOrder(orderId: string) {
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
 
-  useEffect(() => {
-    async function fetchOrder() {
-      if (!supabase || !orderId) {
-        setIsLoading(false);
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const { data, error: queryError } = await supabase
-          .from('orders')
-          .select(`
-            *,
-            items:order_items(*, product:products(*)),
-            shipping_address:shipping_addresses(*)
-          `)
-          .eq('id', orderId)
-          .single();
-
-        if (queryError) throw queryError;
-
-        setOrder(data as OrderWithDetails);
-      } catch (err: any) {
-        // Error fetching order
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
+  const fetchOrder = useCallback(async () => {
+    if (!supabase || !orderId) {
+      setIsLoading(false);
+      return;
     }
 
-    fetchOrder();
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { data, error: queryError } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          items:order_items(*, product:products(*, images:product_images(image_url))),
+          shipping_address:shipping_addresses(*)
+        `)
+        .eq('id', orderId)
+        .single();
+
+      if (queryError) throw queryError;
+
+      const orderData = data as any;
+      if (Array.isArray(orderData.shipping_address)) {
+        orderData.shipping_address = orderData.shipping_address[0] || null;
+      }
+
+      setOrder(orderData as OrderWithDetails);
+    } catch (err: any) {
+      // Error fetching order
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   }, [supabase, orderId]);
 
-  return { order, isLoading, error };
+  useEffect(() => {
+    fetchOrder();
+  }, [fetchOrder]);
+
+  return { order, isLoading, error, refetch: fetchOrder };
 }
 
 // Admin: All orders hook
@@ -140,7 +147,7 @@ export function useAdminOrders(status?: string) {
         .from('orders')
         .select(`
           *,
-          items:order_items(*, product:products(*)),
+          items:order_items(*, product:products(*, images:product_images(image_url))),
           shipping_address:shipping_addresses(*)
         `)
         .order('created_at', { ascending: false });
@@ -153,7 +160,14 @@ export function useAdminOrders(status?: string) {
 
       if (queryError) throw queryError;
 
-      setOrders((data || []) as OrderWithDetails[]);
+      const formattedOrders = (data || []).map((order: any) => ({
+        ...order,
+        shipping_address: Array.isArray(order.shipping_address)
+          ? order.shipping_address[0] || null
+          : order.shipping_address
+      }));
+
+      setOrders(formattedOrders as OrderWithDetails[]);
     } catch (err: any) {
       // Error fetching admin orders
       setError(err.message);

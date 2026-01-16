@@ -198,8 +198,14 @@ export interface Database {
           user_id: string | null
           status: 'pending' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
           total_amount: number
+          discount_amount: number
           payment_intent_id: string | null
           stripe_session_id: string | null
+          razorpay_order_id: string | null
+          razorpay_payment_id: string | null
+          razorpay_signature: string | null
+          coupon_id: string | null
+          gift_card_id: string | null
           created_at: string
           updated_at: string
         }
@@ -208,13 +214,22 @@ export interface Database {
           user_id?: string | null
           status?: 'pending' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
           total_amount: number
+          discount_amount?: number
           payment_intent_id?: string | null
           stripe_session_id?: string | null
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
+          coupon_id?: string | null
+          gift_card_id?: string | null
         }
         Update: {
           status?: 'pending' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
           payment_intent_id?: string | null
           stripe_session_id?: string | null
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
         }
       }
       order_items: {
