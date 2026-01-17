@@ -181,7 +181,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1 }}
               >
-                by Neha Kumari
+                by Raj Choudhary
               </motion.p>
             </motion.div>
 
