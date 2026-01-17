@@ -173,60 +173,85 @@ export default function OrderDetailsPage() {
                 <div className="bg-white dark:bg-[var(--background-alt)] rounded-2xl p-6 shadow-sm border border-clay/10 dark:border-white/10">
                     <h2 className="font-serif text-xl font-medium text-text-dark mb-6">Order Status</h2>
                     <div className="relative">
-                        {/* Timeline line */}
-                        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-clay/20" />
-                        
-                        <div className="space-y-6">
+                        <div className="space-y-0">
                             {(order.status_history && order.status_history.length > 0) ? (
                                 [...order.status_history]
-                                    .filter(entry => entry.is_visible_to_user !== false) // Only show visible
+                                    .filter(entry => entry.is_visible_to_user !== false)
                                     .sort((a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime())
                                     .map((entry, index, arr) => {
                                         const isLatest = index === arr.length - 1;
-                                        const statusColor = {
-                                            pending: 'bg-amber-500',
-                                            processing: 'bg-blue-500',
-                                            shipped: 'bg-purple-500',
-                                            delivered: 'bg-green-500',
-                                            cancelled: 'bg-red-500',
-                                        }[entry.status] || 'bg-gray-400';
+                                        const isFirst = index === 0;
+                                        const statusConfig = {
+                                            pending: { color: 'bg-amber-500', icon: Clock },
+                                            processing: { color: 'bg-blue-500', icon: Package },
+                                            shipped: { color: 'bg-purple-500', icon: Package },
+                                            delivered: { color: 'bg-green-500', icon: Package },
+                                            cancelled: { color: 'bg-red-500', icon: AlertCircle },
+                                        }[entry.status] || { color: 'bg-gray-400', icon: Clock };
+
+                                        const StatusIcon = statusConfig.icon;
 
                                         return (
-                                            <div key={entry.id} className="relative flex items-start gap-4 pl-8">
-                                                {/* Dot */}
-                                                <span className={`absolute left-2 w-4 h-4 rounded-full ${statusColor} ring-4 ring-white dark:ring-[var(--background-alt)] ${isLatest ? 'scale-125' : ''} transition-transform`} />
-                                                
-                                                {/* Content */}
-                                                <div className={`flex-1 p-3 rounded-xl ${isLatest ? 'bg-sand/50' : ''}`}>
-                                                    <p className={`font-medium capitalize ${isLatest ? 'text-text-dark' : 'text-text-muted'}`}>
-                                                        {entry.status}
-                                                    </p>
-                                                    <p className="text-sm text-text-muted">
-                                                        {new Date(entry.changed_at).toLocaleDateString('en-IN', {
-                                                            weekday: 'short',
-                                                            day: 'numeric',
-                                                            month: 'short',
-                                                            year: 'numeric',
-                                                            hour: '2-digit',
-                                                            minute: '2-digit'
-                                                        })}
-                                                    </p>
-                                                    {entry.notes && (
-                                                        <p className="text-xs text-text-muted mt-1 italic">
-                                                            {entry.notes}
-                                                        </p>
+                                            <div key={entry.id} className="relative flex gap-4">
+                                                {/* Timeline Column */}
+                                                <div className="flex flex-col items-center">
+                                                    {/* Dot with icon */}
+                                                    <div className={`relative z-10 w-10 h-10 rounded-full ${statusConfig.color} flex items-center justify-center shadow-md ${isLatest ? 'ring-4 ring-white dark:ring-[var(--background-alt)] shadow-lg scale-110' : ''}`}>
+                                                        <StatusIcon className="w-5 h-5 text-white" />
+                                                    </div>
+                                                    {/* Connecting line - only show if not last */}
+                                                    {!isLatest && (
+                                                        <div className="w-0.5 flex-1 min-h-[24px] bg-gradient-to-b from-clay/30 to-clay/10" />
                                                     )}
+                                                </div>
+
+                                                {/* Content */}
+                                                <div className={`flex-1 pb-6 ${isLatest ? 'pb-0' : ''}`}>
+                                                    <div className={`p-4 rounded-xl transition-all ${isLatest ? 'bg-gradient-to-r from-sand/80 to-sand/40 border border-terracotta/20 shadow-sm' : 'hover:bg-sand/30'}`}>
+                                                        <div className="flex items-center gap-2">
+                                                            <p className={`font-semibold capitalize ${isLatest ? 'text-text-dark text-lg' : 'text-text-muted'}`}>
+                                                                {entry.status}
+                                                            </p>
+                                                            {isLatest && (
+                                                                <span className="px-2 py-0.5 text-[10px] font-bold uppercase bg-terracotta/10 text-terracotta rounded-full">
+                                                                    Current
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-sm text-text-muted mt-1">
+                                                            {new Date(entry.changed_at).toLocaleDateString('en-IN', {
+                                                                weekday: 'short',
+                                                                day: 'numeric',
+                                                                month: 'short',
+                                                                year: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            })}
+                                                        </p>
+                                                        {entry.notes && (
+                                                            <p className="text-xs text-text-muted mt-2 italic bg-white/50 dark:bg-black/10 px-2 py-1 rounded">
+                                                                "{entry.notes}"
+                                                            </p>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         );
                                     })
                             ) : (
-                                // Fallback if no history yet (uses current status)
-                                <div className="relative flex items-start gap-4 pl-8">
-                                    <span className="absolute left-2 w-4 h-4 rounded-full bg-terracotta ring-4 ring-white dark:ring-[var(--background-alt)]" />
-                                    <div className="flex-1 p-3 rounded-xl bg-sand/50">
-                                        <p className="font-medium text-text-dark capitalize">{order.status}</p>
-                                        <p className="text-sm text-text-muted">{formatDate(order.created_at)}</p>
+                                // Fallback if no history yet
+                                <div className="flex gap-4">
+                                    <div className="w-10 h-10 rounded-full bg-terracotta flex items-center justify-center shadow-md ring-4 ring-white dark:ring-[var(--background-alt)]">
+                                        <Package className="w-5 h-5 text-white" />
+                                    </div>
+                                    <div className="flex-1 p-4 rounded-xl bg-gradient-to-r from-sand/80 to-sand/40 border border-terracotta/20">
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-semibold text-text-dark text-lg capitalize">{order.status}</p>
+                                            <span className="px-2 py-0.5 text-[10px] font-bold uppercase bg-terracotta/10 text-terracotta rounded-full">
+                                                Current
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-text-muted mt-1">{formatDate(order.created_at)}</p>
                                     </div>
                                 </div>
                             )}
