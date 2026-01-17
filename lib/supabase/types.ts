@@ -280,6 +280,31 @@ export interface Database {
         }
         Update: never
       }
+      order_status_history: {
+        Row: {
+          id: string
+          order_id: string
+          status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+          changed_at: string
+          changed_by: string | null
+          notes: string | null
+          is_visible_to_user: boolean
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+          changed_at?: string
+          changed_by?: string | null
+          notes?: string | null
+          is_visible_to_user?: boolean
+        }
+        Update: {
+          status?: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+          notes?: string | null
+          is_visible_to_user?: boolean
+        }
+      }
       reviews: {
         Row: {
           id: string

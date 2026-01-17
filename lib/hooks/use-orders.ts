@@ -5,11 +5,22 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/auth-context';
 import type { Order, OrderItem, ShippingAddress, Product } from '@/lib/supabase/types';
 
+export type StatusHistoryEntry = {
+  id: string;
+  order_id: string;
+  status: string;
+  changed_at: string;
+  changed_by: string | null;
+  notes: string | null;
+  is_visible_to_user: boolean;
+};
+
 export type OrderWithDetails = Order & {
   items: (OrderItem & {
     product: (Product & { images: { image_url: string }[] | null } | null)
   })[];
   shipping_address: ShippingAddress | null;
+  status_history?: StatusHistoryEntry[];
 };
 
 interface UseOrdersReturn {
@@ -93,6 +104,7 @@ export function useOrder(orderId: string) {
     setError(null);
 
     try {
+      // Fetch order with items and shipping address
       const { data, error: queryError } = await supabase
         .from('orders')
         .select(`
@@ -110,7 +122,26 @@ export function useOrder(orderId: string) {
         orderData.shipping_address = orderData.shipping_address[0] || null;
       }
 
-      setOrder(orderData as OrderWithDetails);
+      // Try to fetch status history separately (table may not exist yet)
+      let statusHistory: any[] = [];
+      try {
+        const { data: historyData } = await supabase
+          .from('order_status_history')
+          .select('*')
+          .eq('order_id', orderId)
+          .order('changed_at', { ascending: true });
+
+        if (historyData) {
+          statusHistory = historyData;
+        }
+      } catch {
+        // Table doesn't exist yet, ignore
+      }
+
+      setOrder({
+        ...orderData,
+        status_history: statusHistory
+      } as OrderWithDetails);
     } catch (err: any) {
       // Error fetching order
       setError(err.message);

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { formatPrice } from '@/lib/data';
+import { ConfirmModal } from '@/components/ui/Modal';
 
 interface GiftCard {
   id: string;
@@ -37,6 +38,7 @@ export default function AdminGiftCardsPage() {
     code_custom: '', // Optional custom code
   });
 
+  const [deleteCardId, setDeleteCardId] = useState<string | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -118,13 +120,13 @@ export default function AdminGiftCardsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this gift card?')) return;
     if (!supabase) return;
 
     const { error } = await supabase.from('gift_cards').delete().eq('id', id);
     if (!error) {
       setCards(cards.filter(c => c.id !== id));
     }
+    setDeleteCardId(null);
   };
 
   const openEditModal = (card: GiftCard) => {
@@ -401,7 +403,7 @@ export default function AdminGiftCardsPage() {
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button 
-                        onClick={() => handleDelete(card.id)}
+                        onClick={() => setDeleteCardId(card.id)}
                         className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -482,6 +484,17 @@ export default function AdminGiftCardsPage() {
           )}
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteCardId !== null}
+        onClose={() => setDeleteCardId(null)}
+        onConfirm={() => deleteCardId && handleDelete(deleteCardId)}
+        title="Delete Gift Card"
+        message="Are you sure you want to delete this gift card? This action cannot be undone."
+        confirmText="Delete"
+        variant="danger"
+      />
     </div>
   );
 }

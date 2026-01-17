@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { formatPrice } from '@/lib/data';
+import { ConfirmModal } from '@/components/ui/Modal';
 
 interface Coupon {
   id: string;
@@ -41,6 +42,7 @@ export default function AdminCouponsPage() {
     end_date: '',
   });
 
+  const [deleteCouponId, setDeleteCouponId] = useState<string | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -100,13 +102,13 @@ export default function AdminCouponsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this coupon?')) return;
     if (!supabase) return;
 
     const { error } = await supabase.from('coupons').delete().eq('id', id);
     if (!error) {
       setCoupons(coupons.filter(c => c.id !== id));
     }
+    setDeleteCouponId(null);
   };
 
   const toggleActive = async (id: string, currentState: boolean) => {
@@ -493,7 +495,7 @@ export default function AdminCouponsPage() {
                     {coupon.is_active ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
                   </button>
                   <button 
-                    onClick={() => handleDelete(coupon.id)}
+                    onClick={() => setDeleteCouponId(coupon.id)}
                     className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -534,6 +536,17 @@ export default function AdminCouponsPage() {
           ))
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteCouponId !== null}
+        onClose={() => setDeleteCouponId(null)}
+        onConfirm={() => deleteCouponId && handleDelete(deleteCouponId)}
+        title="Delete Coupon"
+        message="Are you sure you want to delete this coupon? This action cannot be undone."
+        confirmText="Delete"
+        variant="danger"
+      />
     </div>
   );
 }

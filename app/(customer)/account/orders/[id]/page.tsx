@@ -9,6 +9,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
+import { AlertModal } from '@/components/ui/Modal';
 
 export default function OrderDetailsPage() {
   const params = useParams();
@@ -18,6 +19,7 @@ export default function OrderDetailsPage() {
   const router = useRouter();
   const [cancelling, setCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [alertModal, setAlertModal] = useState<{ title: string; message: string } | null>(null);
   const supabase = createClient();
 
   // Redirect if not logged in
@@ -69,7 +71,7 @@ export default function OrderDetailsPage() {
       refetch(); 
     } catch (error) {
       console.error('Error cancelling order:', error);
-      alert('Failed to cancel order. Please try again.');
+      setAlertModal({ title: 'Error', message: 'Failed to cancel order. Please try again.' });
     } finally {
       setCancelling(false);
     }
@@ -167,21 +169,68 @@ export default function OrderDetailsPage() {
                     </div>
                 </div>
 
-                {/* Timeline (Simplified for now) */}
+                {/* Order Status Timeline */}
                 <div className="bg-white dark:bg-[var(--background-alt)] rounded-2xl p-6 shadow-sm border border-clay/10 dark:border-white/10">
-                    <h2 className="font-serif text-xl font-medium text-text-dark mb-4">Order Status</h2>
-                    <div className="relative pl-8 border-l-2 border-clay/10 space-y-8">
-                        <div className="relative">
-                            <span className="absolute -left-[37px] w-4 h-4 rounded-full bg-terracotta ring-4 ring-white dark:ring-[var(--background-alt)]" />
-                            <p className="font-medium text-text-dark capitalize">{order.status}</p>
-                            <p className="text-sm text-text-muted">{formatDate(order.created_at)}</p>
+                    <h2 className="font-serif text-xl font-medium text-text-dark mb-6">Order Status</h2>
+                    <div className="relative">
+                        {/* Timeline line */}
+                        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-clay/20" />
+                        
+                        <div className="space-y-6">
+                            {(order.status_history && order.status_history.length > 0) ? (
+                                [...order.status_history]
+                                    .filter(entry => entry.is_visible_to_user !== false) // Only show visible
+                                    .sort((a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime())
+                                    .map((entry, index, arr) => {
+                                        const isLatest = index === arr.length - 1;
+                                        const statusColor = {
+                                            pending: 'bg-amber-500',
+                                            processing: 'bg-blue-500',
+                                            shipped: 'bg-purple-500',
+                                            delivered: 'bg-green-500',
+                                            cancelled: 'bg-red-500',
+                                        }[entry.status] || 'bg-gray-400';
+
+                                        return (
+                                            <div key={entry.id} className="relative flex items-start gap-4 pl-8">
+                                                {/* Dot */}
+                                                <span className={`absolute left-2 w-4 h-4 rounded-full ${statusColor} ring-4 ring-white dark:ring-[var(--background-alt)] ${isLatest ? 'scale-125' : ''} transition-transform`} />
+                                                
+                                                {/* Content */}
+                                                <div className={`flex-1 p-3 rounded-xl ${isLatest ? 'bg-sand/50' : ''}`}>
+                                                    <p className={`font-medium capitalize ${isLatest ? 'text-text-dark' : 'text-text-muted'}`}>
+                                                        {entry.status}
+                                                    </p>
+                                                    <p className="text-sm text-text-muted">
+                                                        {new Date(entry.changed_at).toLocaleDateString('en-IN', {
+                                                            weekday: 'short',
+                                                            day: 'numeric',
+                                                            month: 'short',
+                                                            year: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        })}
+                                                    </p>
+                                                    {entry.notes && (
+                                                        <p className="text-xs text-text-muted mt-1 italic">
+                                                            {entry.notes}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                            ) : (
+                                // Fallback if no history yet (uses current status)
+                                <div className="relative flex items-start gap-4 pl-8">
+                                    <span className="absolute left-2 w-4 h-4 rounded-full bg-terracotta ring-4 ring-white dark:ring-[var(--background-alt)]" />
+                                    <div className="flex-1 p-3 rounded-xl bg-sand/50">
+                                        <p className="font-medium text-text-dark capitalize">{order.status}</p>
+                                        <p className="text-sm text-text-muted">{formatDate(order.created_at)}</p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                        {order.status === 'delivered' && (
-                            <div className="relative">
-                                <span className="absolute -left-[37px] w-4 h-4 rounded-full bg-green-500 ring-4 ring-white dark:ring-[var(--background-alt)]" />
-                                <p className="font-medium text-text-dark">Delivered</p>
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>
@@ -316,6 +365,15 @@ export default function OrderDetailsPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Alert Modal */}
+      <AlertModal
+        isOpen={alertModal !== null}
+        onClose={() => setAlertModal(null)}
+        title={alertModal?.title || ''}
+        message={alertModal?.message || ''}
+        variant="error"
+      />
     </div>
   );
 }

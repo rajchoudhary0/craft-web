@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Search, Eye, X, Package, Truck, Check, Clock, Loader2,
-  ChevronLeft, ChevronRight, Download
+  Search, Eye, EyeOff, X, Package, Truck, Check, Clock, Loader2,
+  ChevronLeft, ChevronRight, Download, Trash2
 } from 'lucide-react';
 import { formatPrice } from '@/lib/data';
 import { createClient } from '@/lib/supabase/client';
+import { ConfirmModal } from '@/components/ui/Modal';
 
 interface OrderItem {
   id: string;
@@ -34,6 +35,16 @@ interface Order {
     postal_code: string;
     phone: string;
   } | null;
+}
+
+interface StatusHistoryEntry {
+  id: string;
+  order_id: string;
+  status: string;
+  changed_at: string;
+  changed_by: string | null;
+  notes: string | null;
+  is_visible_to_user: boolean;
 }
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
@@ -67,6 +78,13 @@ export default function AdminOrdersPage() {
   // Selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  
+  // Status History
+  const [statusHistory, setStatusHistory] = useState<StatusHistoryEntry[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  
+  // Delete confirmation modal
+  const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
   
   const supabase = createClient();
 
@@ -144,22 +162,100 @@ export default function AdminOrdersPage() {
     setSelectedIds(newSelected);
   };
 
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+  const updateOrderStatus = async (orderId: string, newStatus: string, notes?: string) => {
     if (!supabase) return;
     setIsUpdating(true);
+    
+    // Update order status
     const { error } = await supabase
       .from('orders')
       .update({ status: newStatus })
       .eq('id', orderId);
 
     if (!error) {
+      // Log to status history (visible by default, admin can toggle later)
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase
+        .from('order_status_history')
+        .insert({
+          order_id: orderId,
+          status: newStatus,
+          changed_by: user?.id || null,
+          notes: notes || null,
+          is_visible_to_user: true
+        });
+
       setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus as Order['status'] } : o));
       if (selectedOrder?.id === orderId) {
         setSelectedOrder({ ...selectedOrder, status: newStatus as Order['status'] });
+        // Refresh history to show new entry
+        fetchStatusHistory(orderId);
       }
     }
     setIsUpdating(false);
   };
+
+  // Fetch status history for an order
+  const fetchStatusHistory = useCallback(async (orderId: string) => {
+    if (!supabase) return;
+    setIsLoadingHistory(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from('order_status_history')
+        .select('*')
+        .eq('order_id', orderId)
+        .order('changed_at', { ascending: true });
+      
+      if (!error && data) {
+        setStatusHistory(data as StatusHistoryEntry[]);
+      }
+    } catch {
+      // Ignore errors
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  }, [supabase]);
+
+  // Toggle visibility of a history entry
+  const toggleHistoryVisibility = async (entryId: string, currentVisibility: boolean) => {
+    if (!supabase) return;
+    
+    const { error } = await supabase
+      .from('order_status_history')
+      .update({ is_visible_to_user: !currentVisibility })
+      .eq('id', entryId);
+    
+    if (!error) {
+      setStatusHistory(statusHistory.map(h => 
+        h.id === entryId ? { ...h, is_visible_to_user: !currentVisibility } : h
+      ));
+    }
+  };
+
+  // Delete a history entry
+  const deleteHistoryEntry = async (entryId: string) => {
+    if (!supabase) return;
+    
+    const { error } = await supabase
+      .from('order_status_history')
+      .delete()
+      .eq('id', entryId);
+    
+    if (!error) {
+      setStatusHistory(statusHistory.filter(h => h.id !== entryId));
+    }
+    setDeleteEntryId(null);
+  };
+
+  // Fetch history when order is selected
+  useEffect(() => {
+    if (selectedOrder) {
+      fetchStatusHistory(selectedOrder.id);
+    } else {
+      setStatusHistory([]);
+    }
+  }, [selectedOrder, fetchStatusHistory]);
 
   const handleBulkStatusUpdate = async (newStatus: string) => {
     if (selectedIds.size === 0) return;
@@ -172,6 +268,19 @@ export default function AdminOrdersPage() {
       .in('id', Array.from(selectedIds));
     
     if (!error) {
+      // Log to status history for each order
+      const { data: { user } } = await supabase.auth.getUser();
+      const historyRecords = Array.from(selectedIds).map(orderId => ({
+        order_id: orderId,
+        status: newStatus,
+        changed_by: user?.id || null,
+        notes: 'Bulk status update'
+      }));
+      
+      await supabase
+        .from('order_status_history')
+        .insert(historyRecords);
+
       setOrders(orders.map(o => 
         selectedIds.has(o.id) ? { ...o, status: newStatus as Order['status'] } : o
       ));
@@ -507,6 +616,72 @@ export default function AdminOrdersPage() {
                   </select>
                 </div>
 
+                {/* Status History Timeline */}
+                <div>
+                  <h4 className="font-medium text-text-dark mb-3 flex items-center gap-2">
+                    <Clock className="w-4 h-4" /> Status History
+                  </h4>
+                  {isLoadingHistory ? (
+                    <div className="flex justify-center py-4">
+                      <Loader2 className="w-5 h-5 animate-spin text-terracotta" />
+                    </div>
+                  ) : statusHistory.length > 0 ? (
+                    <div className="relative pl-6 border-l-2 border-clay/20 space-y-4">
+                      {statusHistory.map((entry) => {
+                        const statusColor = {
+                          pending: 'bg-amber-500',
+                          processing: 'bg-blue-500',
+                          shipped: 'bg-purple-500',
+                          delivered: 'bg-green-500',
+                          cancelled: 'bg-red-500',
+                        }[entry.status] || 'bg-gray-400';
+
+                        return (
+                          <div 
+                            key={entry.id} 
+                            className={`relative flex items-start gap-3 ${!entry.is_visible_to_user ? 'opacity-50' : ''}`}
+                          >
+                            <span className={`absolute -left-[31px] w-3 h-3 rounded-full ${statusColor} ring-2 ring-cream`} />
+                            
+                            <div className="flex-1">
+                              <p className="font-medium text-text-dark capitalize text-sm">{entry.status}</p>
+                              <p className="text-xs text-text-muted">
+                                {new Date(entry.changed_at).toLocaleDateString('en-IN', {
+                                  day: 'numeric', month: 'short', year: 'numeric',
+                                  hour: '2-digit', minute: '2-digit'
+                                })}
+                              </p>
+                              {entry.notes && (
+                                <p className="text-xs text-text-muted italic mt-0.5">{entry.notes}</p>
+                              )}
+                            </div>
+                            
+                            {/* Action Buttons */}
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => toggleHistoryVisibility(entry.id, entry.is_visible_to_user)}
+                                className={`p-1.5 rounded-lg transition-colors ${entry.is_visible_to_user ? 'hover:bg-sand text-text-muted' : 'bg-amber-100 text-amber-700'}`}
+                                title={entry.is_visible_to_user ? 'Hide from user' : 'Show to user'}
+                              >
+                                {entry.is_visible_to_user ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                              </button>
+                              <button
+                                onClick={() => setDeleteEntryId(entry.id)}
+                                className="p-1.5 rounded-lg hover:bg-red-50 text-text-muted hover:text-red-500 transition-colors"
+                                title="Delete entry"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-text-muted italic">No status history yet.</p>
+                  )}
+                </div>
+
                 <div>
                   <h4 className="font-medium text-text-dark mb-3">Items</h4>
                   <div className="space-y-3">
@@ -536,6 +711,17 @@ export default function AdminOrdersPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteEntryId !== null}
+        onClose={() => setDeleteEntryId(null)}
+        onConfirm={() => deleteEntryId && deleteHistoryEntry(deleteEntryId)}
+        title="Delete Status Entry"
+        message="Are you sure you want to delete this status entry? This action cannot be undone."
+        confirmText="Delete"
+        variant="danger"
+      />
     </div>
   );
 }

@@ -13,6 +13,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { useOrders } from '@/lib/hooks/use-orders';
 import { useWishlist } from '@/lib/wishlist-context';
+import { ConfirmModal, AlertModal } from '@/components/ui/Modal';
 
 export default function AccountPage() {
   const { user, isLoading, signOut } = useAuth();
@@ -33,6 +34,8 @@ export default function AccountPage() {
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [addressLoading, setAddressLoading] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+  const [deleteAddressId, setDeleteAddressId] = useState<string | null>(null);
+  const [alertModal, setAlertModal] = useState<{ title: string; message: string; variant: 'error' | 'success' } | null>(null);
 
   const [successMessage, setSuccessMessage] = useState('');
   const [profileMessage, setProfileMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
@@ -170,9 +173,7 @@ export default function AccountPage() {
       setSuccessMessage(editingAddressId ? 'Address updated successfully!' : 'Address saved successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
-      // Error saving address handled silently
-      // Fallback for error handling (could also be a state message)
-      alert('Failed to save address. Please try again.');
+      setAlertModal({ title: 'Error', message: 'Failed to save address. Please try again.', variant: 'error' });
     } finally {
       setAddressLoading(false);
     }
@@ -209,11 +210,11 @@ export default function AccountPage() {
   };
 
   const deleteAddress = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this address?')) return;
     const { error } = await supabase.from('user_addresses').delete().eq('id', id);
     if (!error) {
       setSavedAddresses(prev => prev.filter(addr => addr.id !== id));
     }
+    setDeleteAddressId(null);
   };
 
   // Show loading spinner while checking auth
@@ -635,7 +636,7 @@ export default function AccountPage() {
                             <Pencil className="w-4 h-4" />
                           </button>
                           <button 
-                            onClick={() => deleteAddress(addr.id)}
+                            onClick={() => setDeleteAddressId(addr.id)}
                             className="text-red-500 hover:text-red-700 p-2"
                             title="Delete"
                           >
@@ -779,9 +780,29 @@ export default function AccountPage() {
                 </motion.div>
               )}
             </AnimatePresence>
-          </div>
         </div>
       </div>
+    </div>
+
+      {/* Delete Address Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteAddressId !== null}
+        onClose={() => setDeleteAddressId(null)}
+        onConfirm={() => deleteAddressId && deleteAddress(deleteAddressId)}
+        title="Delete Address"
+        message="Are you sure you want to delete this address?"
+        confirmText="Delete"
+        variant="danger"
+      />
+
+      {/* Alert Modal */}
+      <AlertModal
+        isOpen={alertModal !== null}
+        onClose={() => setAlertModal(null)}
+        title={alertModal?.title || ''}
+        message={alertModal?.message || ''}
+        variant={alertModal?.variant || 'error'}
+      />
     </div>
   );
 }

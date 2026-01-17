@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Pencil, Trash2, Loader2, X, FolderTree, ImageIcon, Upload } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
+import { ConfirmModal } from '@/components/ui/Modal';
 
 interface Category {
   id: string;
@@ -35,6 +36,7 @@ export default function AdminCategoriesPage() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [deleteCategoryId, setDeleteCategoryId] = useState<string | null>(null);
   const supabase = createClient();
 
   // Handle image file upload
@@ -182,8 +184,6 @@ export default function AdminCategoriesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure? Products in this category will become uncategorized.')) return;
-
     try {
       const { error } = await supabase
         .from('categories')
@@ -193,9 +193,9 @@ export default function AdminCategoriesPage() {
       if (error) throw error;
       fetchCategories();
     } catch (err) {
-      // Error deleting category
       showToast('Failed to delete category.', 'error');
     }
+    setDeleteCategoryId(null);
   };
 
   return (
@@ -276,7 +276,7 @@ export default function AdminCategoriesPage() {
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(cat.id)}
+                        onClick={() => setDeleteCategoryId(cat.id)}
                         className="p-2 rounded-lg hover:bg-red-50 text-text-muted hover:text-red-500 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -483,6 +483,17 @@ export default function AdminCategoriesPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteCategoryId !== null}
+        onClose={() => setDeleteCategoryId(null)}
+        onConfirm={() => deleteCategoryId && handleDelete(deleteCategoryId)}
+        title="Delete Category"
+        message="Are you sure? Products in this category will become uncategorized."
+        confirmText="Delete"
+        variant="warning"
+      />
     </div>
   );
 }

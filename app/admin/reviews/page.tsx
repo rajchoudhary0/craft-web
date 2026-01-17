@@ -9,6 +9,7 @@ import {
 import { useAdminReviews } from '@/lib/hooks/use-reviews';
 import StarRating from '@/components/ui/StarRating';
 import Button from '@/components/ui/Button';
+import { ConfirmModal } from '@/components/ui/Modal';
 
 export default function AdminReviewsPage() {
   const { 
@@ -22,6 +23,7 @@ export default function AdminReviewsPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingReview, setEditingReview] = useState<any>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [deleteReviewId, setDeleteReviewId] = useState<string | null>(null);
 
   // Filter reviews
   const filteredReviews = reviews.filter(review => {
@@ -52,10 +54,10 @@ export default function AdminReviewsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this review?')) return;
     setProcessingId(id);
     await deleteReview(id);
     setProcessingId(null);
+    setDeleteReviewId(null);
   };
 
   const pendingCount = reviews.filter(r => !r.is_approved).length;
@@ -226,7 +228,7 @@ export default function AdminReviewsPage() {
                               </button>
                             )}
                             <button
-                              onClick={() => handleDelete(review.id)}
+                              onClick={() => setDeleteReviewId(review.id)}
                               className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
                               title="Delete"
                             >
@@ -253,6 +255,17 @@ export default function AdminReviewsPage() {
           />
         )}
       </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteReviewId !== null}
+        onClose={() => setDeleteReviewId(null)}
+        onConfirm={() => deleteReviewId && handleDelete(deleteReviewId)}
+        title="Delete Review"
+        message="Are you sure you want to delete this review? This action cannot be undone."
+        confirmText="Delete"
+        variant="danger"
+      />
     </div>
   );
 }
