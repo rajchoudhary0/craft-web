@@ -9,6 +9,7 @@ import { useCart } from '@/lib/cart-context';
 import { useWishlist } from '@/lib/wishlist-context';
 import { useAuth } from '@/lib/auth-context';
 import { createClient } from '@/lib/supabase/client';
+import { useStoreSettings } from '@/lib/store-context';
 import MobileMenu from './MobileMenu';
 
 const navLinks = [
@@ -32,6 +33,7 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const settings = useStoreSettings();
 
   // Check if user is admin
   useEffect(() => {
@@ -209,10 +211,10 @@ export default function Header() {
               {/* Brand text */}
               <div className="hidden sm:block">
                 <h1 className="font-display text-xl font-semibold text-text-dark tracking-tight leading-none">
-                  The Vybe Store
+                  {settings?.store_name || "The Vybe Store"}
                 </h1>
                 <p className="text-[10px] tracking-[0.15em] uppercase text-text-muted font-medium mt-0.5">
-                  by Raj
+                  {settings?.tagline || "by Raj"}
                 </p>
               </div>
             </Link>

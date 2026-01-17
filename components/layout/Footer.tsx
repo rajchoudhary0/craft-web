@@ -3,8 +3,15 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Instagram, Facebook, Twitter, Mail, ArrowRight, Heart, Sparkles } from 'lucide-react';
+import { Instagram, Facebook, Mail, ArrowRight, Heart, Sparkles } from 'lucide-react';
 import { staggerContainer, fadeInUp } from '@/lib/animations';
+import { useStoreSettings } from '@/lib/store-context';
+
+const XIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+  </svg>
+);
 
 const quickLinks = [
   { label: 'Shop All', href: '/products' },
@@ -21,15 +28,16 @@ const supportLinks = [
   { label: 'Privacy Policy', href: '/privacy' },
 ];
 
-const socialLinks = [
-  { icon: Instagram, href: 'https://instagram.com', label: 'Instagram' },
-  { icon: Facebook, href: 'https://facebook.com', label: 'Facebook' },
-  { icon: Twitter, href: 'https://twitter.com', label: 'Twitter' },
-];
-
 export default function Footer() {
+  const settings = useStoreSettings();
   const [email, setEmail] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
+
+  const socialLinks = [
+    { icon: Instagram, href: settings?.instagram_url || 'https://instagram.com', label: 'Instagram' },
+    { icon: Facebook, href: settings?.facebook_url || 'https://facebook.com', label: 'Facebook' },
+    { icon: XIcon, href: settings?.twitter_url || 'https://twitter.com', label: 'X (Twitter)' },
+  ];
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,10 +112,10 @@ export default function Footer() {
                   </div>
                   <div>
                     <span className="font-display text-xl font-medium text-text-dark">
-                      The Vybe Store
+                      {settings?.store_name || "The Vybe Store"}
                     </span>
                     <p className="text-[9px] tracking-[0.25em] uppercase text-terracotta font-medium -mt-0.5">
-                      by Raj Choudhary
+                      {settings?.tagline || "by Raj Choudhary"}
                     </p>
                   </div>
                 </div>
@@ -273,9 +281,9 @@ export default function Footer() {
 
             {/* Copyright */}
             <p className="text-sm text-text-muted text-center">
-              © {new Date().getFullYear()} The Vybe Store. Crafted with{' '}
+              © {new Date().getFullYear()} {settings?.store_name || "The Vybe Store"}. Crafted with{' '}
               <Heart className="w-3 h-3 inline fill-terracotta text-terracotta" />{' '}
-              by Raj Choudhary
+              by {settings?.tagline ? "Store Team" : "Raj Choudhary"}
             </p>
 
             {/* Handmade badge */}

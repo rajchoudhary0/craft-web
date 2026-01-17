@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useStoreSettings } from '@/lib/store-context';
 
 interface SplashScreenProps {
   onComplete?: () => void;
 }
 
 export default function SplashScreen({ onComplete }: SplashScreenProps) {
+  const settings = useStoreSettings();
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState<'loading' | 'exiting' | 'done'>('loading');
   const [mounted, setMounted] = useState(false);
@@ -173,7 +175,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
               transition={{ duration: 0.6, delay: 0.5, ease: 'easeOut' }}
             >
               <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-text-dark tracking-tight">
-                The Vybe Store
+                {settings?.store_name || "The Vybe Store"}
               </h1>
               <motion.p 
                 className="text-xs sm:text-sm tracking-[0.3em] uppercase text-terracotta font-medium mt-3"
@@ -181,7 +183,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1 }}
               >
-                by Raj Choudhary
+                {settings?.tagline || "by Raj Choudhary"}
               </motion.p>
             </motion.div>
 

@@ -1,44 +1,106 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Save, Check, Store, Mail, MapPin, Phone, Globe, Share2, Database } from 'lucide-react';
+import { Save, Check, Store, Mail, MapPin, Phone, Globe, Share2, Database, AlertCircle } from 'lucide-react';
 import { staggerContainer, fadeInUp } from '@/lib/animations';
 import { useToast } from '@/components/ui/Toast';
+import { createClient } from '@/lib/supabase/client';
 
 export default function AdminSettingsPage() {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState('store');
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
+  
+  const supabase = createClient();
 
-  const [storeInfo, setStoreInfo] = useState({
-    name: 'The Vybe Store',
-    tagline: 'Handcrafted with Love by Neha Kumari',
-    email: 'hello@thevybestore.com',
-    phone: '+1 (555) 123-4567',
-    address: '123 Craft Lane, Mountain View, CA 94043',
+  const [settings, setSettings] = useState({
+    id: '',
+    store_name: '',
+    tagline: '',
+    email: '',
+    phone: '',
+    address: '',
     currency: 'USD',
+    instagram_url: '',
+    facebook_url: '',
+    twitter_url: '',
+    seo_title: '',
+    seo_description: '',
+    seo_keywords: '',
   });
 
-  const [socialLinks, setSocialLinks] = useState({
-    instagram: 'https://instagram.com/thevybestore',
-    facebook: 'https://facebook.com/thevybestore',
-    twitter: 'https://twitter.com/thevybestore',
-  });
+  useEffect(() => {
+    fetchSettings();
+  }, []);
 
-  const [seoSettings, setSeoSettings] = useState({
-    title: 'The Vybe Store | Handcrafted with Love',
-    description: 'Discover unique, handmade treasures crafted with passion by Neha Kumari. Premium handcrafted goods from our studio.',
-    keywords: 'handmade, crafts, the vybe store, home decor, ceramics, textiles, neha kumari',
-  });
+  const fetchSettings = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('store_settings')
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error fetching settings:', error);
+      // No toast on initial fetch to avoid noise, potentially table doesn't exist yet
+    } else if (data) {
+      setSettings(data);
+    }
+    setIsLoading(false);
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 2000);
+    
+    try {
+      if (settings.id) {
+        // Update existing
+        const { error } = await supabase
+          .from('store_settings')
+          .update({
+            store_name: settings.store_name,
+            tagline: settings.tagline,
+            email: settings.email,
+            phone: settings.phone,
+            address: settings.address,
+            currency: settings.currency,
+            instagram_url: settings.instagram_url,
+            facebook_url: settings.facebook_url,
+            twitter_url: settings.twitter_url,
+            seo_title: settings.seo_title,
+            seo_description: settings.seo_description,
+            seo_keywords: settings.seo_keywords,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', settings.id);
+          
+        if (error) throw error;
+      } else {
+        // Insert new (should rarely happen if access is restricted, but handles init)
+        const { error } = await supabase
+          .from('store_settings')
+          .insert([{
+            ...settings,
+            // remove id to let DB generate it
+            id: undefined, 
+          }]);
+          
+        if (error) throw error;
+        // Refetch to get ID
+        fetchSettings();
+      }
+
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      showToast('Failed to save settings', 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const tabs = [
@@ -47,6 +109,14 @@ export default function AdminSettingsPage() {
     { id: 'seo', label: 'SEO', icon: Globe },
     { id: 'database', label: 'Database', icon: Database },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-8 h-8 border-2 border-terracotta border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -72,12 +142,12 @@ export default function AdminSettingsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-clay/20">
+      <div className="flex gap-2 border-b border-clay/20 overflow-x-auto pb-1">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
+            className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap ${
               activeTab === tab.id
                 ? 'border-terracotta text-terracotta'
                 : 'border-transparent text-text-muted hover:text-text-dark'
@@ -106,8 +176,8 @@ export default function AdminSettingsPage() {
                 <label className="block text-sm font-medium text-text-dark mb-2">Store Name</label>
                 <input
                   type="text"
-                  value={storeInfo.name}
-                  onChange={(e) => setStoreInfo({ ...storeInfo, name: e.target.value })}
+                  value={settings.store_name}
+                  onChange={(e) => setSettings({ ...settings, store_name: e.target.value })}
                   className="w-full px-4 py-3 bg-sand/50 border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta transition-colors"
                 />
               </div>
@@ -115,8 +185,8 @@ export default function AdminSettingsPage() {
                 <label className="block text-sm font-medium text-text-dark mb-2">Tagline</label>
                 <input
                   type="text"
-                  value={storeInfo.tagline}
-                  onChange={(e) => setStoreInfo({ ...storeInfo, tagline: e.target.value })}
+                  value={settings.tagline}
+                  onChange={(e) => setSettings({ ...settings, tagline: e.target.value })}
                   className="w-full px-4 py-3 bg-sand/50 border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta transition-colors"
                 />
               </div>
@@ -130,8 +200,8 @@ export default function AdminSettingsPage() {
                 </label>
                 <input
                   type="email"
-                  value={storeInfo.email}
-                  onChange={(e) => setStoreInfo({ ...storeInfo, email: e.target.value })}
+                  value={settings.email}
+                  onChange={(e) => setSettings({ ...settings, email: e.target.value })}
                   className="w-full px-4 py-3 bg-sand/50 border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta transition-colors"
                 />
               </div>
@@ -142,8 +212,8 @@ export default function AdminSettingsPage() {
                 </label>
                 <input
                   type="text"
-                  value={storeInfo.phone}
-                  onChange={(e) => setStoreInfo({ ...storeInfo, phone: e.target.value })}
+                  value={settings.phone}
+                  onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
                   className="w-full px-4 py-3 bg-sand/50 border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta transition-colors"
                 />
               </div>
@@ -156,10 +226,21 @@ export default function AdminSettingsPage() {
               </label>
               <input
                 type="text"
-                value={storeInfo.address}
-                onChange={(e) => setStoreInfo({ ...storeInfo, address: e.target.value })}
+                value={settings.address}
+                onChange={(e) => setSettings({ ...settings, address: e.target.value })}
                 className="w-full px-4 py-3 bg-sand/50 border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta transition-colors"
               />
+            </div>
+            
+            <div>
+               <label className="block text-sm font-medium text-text-dark mb-2">Currency Code</label>
+               <input
+                 type="text"
+                 value={settings.currency}
+                 onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
+                 maxLength={3}
+                 className="w-full md:w-1/3 px-4 py-3 bg-sand/50 border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta transition-colors uppercase"
+               />
             </div>
           </motion.div>
         )}
@@ -175,31 +256,34 @@ export default function AdminSettingsPage() {
             <h3 className="font-serif font-semibold text-text-dark">Social Media Links</h3>
             
             <div>
-              <label className="block text-sm font-medium text-text-dark mb-2">Instagram</label>
+              <label className="block text-sm font-medium text-text-dark mb-2">Instagram URL</label>
               <input
                 type="url"
-                value={socialLinks.instagram}
-                onChange={(e) => setSocialLinks({ ...socialLinks, instagram: e.target.value })}
+                value={settings.instagram_url}
+                onChange={(e) => setSettings({ ...settings, instagram_url: e.target.value })}
+                placeholder="https://instagram.com/..."
                 className="w-full px-4 py-3 bg-sand/50 border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-text-dark mb-2">Facebook</label>
+              <label className="block text-sm font-medium text-text-dark mb-2">Facebook URL</label>
               <input
                 type="url"
-                value={socialLinks.facebook}
-                onChange={(e) => setSocialLinks({ ...socialLinks, facebook: e.target.value })}
+                value={settings.facebook_url}
+                onChange={(e) => setSettings({ ...settings, facebook_url: e.target.value })}
+                placeholder="https://facebook.com/..."
                 className="w-full px-4 py-3 bg-sand/50 border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-text-dark mb-2">Twitter</label>
+              <label className="block text-sm font-medium text-text-dark mb-2">X (Twitter) URL</label>
               <input
                 type="url"
-                value={socialLinks.twitter}
-                onChange={(e) => setSocialLinks({ ...socialLinks, twitter: e.target.value })}
+                value={settings.twitter_url}
+                onChange={(e) => setSettings({ ...settings, twitter_url: e.target.value })}
+                placeholder="https://twitter.com/..."
                 className="w-full px-4 py-3 bg-sand/50 border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta transition-colors"
               />
             </div>
@@ -217,33 +301,33 @@ export default function AdminSettingsPage() {
             <h3 className="font-serif font-semibold text-text-dark">SEO Settings</h3>
             
             <div>
-              <label className="block text-sm font-medium text-text-dark mb-2">Page Title</label>
+              <label className="block text-sm font-medium text-text-dark mb-2">Page Title Default</label>
               <input
                 type="text"
-                value={seoSettings.title}
-                onChange={(e) => setSeoSettings({ ...seoSettings, title: e.target.value })}
+                value={settings.seo_title}
+                onChange={(e) => setSettings({ ...settings, seo_title: e.target.value })}
                 className="w-full px-4 py-3 bg-sand/50 border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta transition-colors"
               />
-              <p className="text-xs text-text-muted mt-1">{seoSettings.title.length}/60 characters</p>
+              <p className="text-xs text-text-muted mt-1">{settings.seo_title.length}/60 characters</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-text-dark mb-2">Meta Description</label>
+              <label className="block text-sm font-medium text-text-dark mb-2">Meta Description Default</label>
               <textarea
-                value={seoSettings.description}
-                onChange={(e) => setSeoSettings({ ...seoSettings, description: e.target.value })}
+                value={settings.seo_description}
+                onChange={(e) => setSettings({ ...settings, seo_description: e.target.value })}
                 rows={3}
                 className="w-full px-4 py-3 bg-sand/50 border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta transition-colors resize-none"
               />
-              <p className="text-xs text-text-muted mt-1">{seoSettings.description.length}/160 characters</p>
+              <p className="text-xs text-text-muted mt-1">{settings.seo_description.length}/160 characters</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-text-dark mb-2">Keywords</label>
+              <label className="block text-sm font-medium text-text-dark mb-2">Keywords Default</label>
               <input
                 type="text"
-                value={seoSettings.keywords}
-                onChange={(e) => setSeoSettings({ ...seoSettings, keywords: e.target.value })}
+                value={settings.seo_keywords}
+                onChange={(e) => setSettings({ ...settings, seo_keywords: e.target.value })}
                 className="w-full px-4 py-3 bg-sand/50 border border-clay/20 rounded-xl focus:outline-none focus:border-terracotta transition-colors"
                 placeholder="Comma-separated keywords"
               />
@@ -277,11 +361,11 @@ export default function AdminSettingsPage() {
                      const response = await fetch('/api/seed', { method: 'POST' });
                      if (!response.ok) throw new Error('Failed to seed');
                      setShowSuccess(true);
+                     setTimeout(() => setShowSuccess(false), 2000);
                    } catch (error) {
                      showToast('Error seeding database', 'error');
                    } finally {
                      setIsSaving(false);
-                     setTimeout(() => setShowSuccess(false), 2000);
                    }
                 }}
                 disabled={isSaving}
@@ -294,23 +378,25 @@ export default function AdminSettingsPage() {
         )}
       </AnimatePresence>
 
-      {/* Save Button */}
-      <div className="flex justify-end pt-4">
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="flex items-center gap-2 px-6 py-3 bg-terracotta text-cream rounded-xl hover:bg-terracotta-dark disabled:opacity-50 transition-colors"
-        >
-          {isSaving ? (
-            <div className="w-5 h-5 border-2 border-cream border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <>
-              <Save className="w-5 h-5" />
-              Save Changes
-            </>
-          )}
-        </button>
-      </div>
+      {/* Save Button for Settings Tabs */}
+      {activeTab !== 'database' && (
+        <div className="flex justify-end pt-4">
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="flex items-center gap-2 px-6 py-3 bg-terracotta text-cream rounded-xl hover:bg-terracotta-dark disabled:opacity-50 transition-colors"
+          >
+            {isSaving ? (
+              <div className="w-5 h-5 border-2 border-cream border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>
+                <Save className="w-5 h-5" />
+                Save Changes
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
