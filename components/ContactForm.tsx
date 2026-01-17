@@ -2,9 +2,10 @@
 
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, CheckCircle, User, Mail, MessageSquare } from 'lucide-react';
+import { Send, CheckCircle, User, Mail, MessageSquare, AlertCircle } from 'lucide-react';
 import { staggerContainer, fadeInUp } from '@/lib/animations';
 import Button from '@/components/ui/Button';
+import { createClient } from '@/lib/supabase/client';
 
 interface FormData {
   name: string;
@@ -30,6 +31,9 @@ export default function ContactForm() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  
+  const supabase = createClient();
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -64,18 +68,34 @@ export default function ContactForm() {
     if (!validateForm()) return;
     
     setIsSubmitting(true);
+    setSubmitError(null);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-    
-    // Reset after showing success
-    setTimeout(() => {
-      setIsSubmitted(false);
-      setFormData({ name: '', email: '', subject: '', message: '' });
-    }, 5000);
+    try {
+      // Save to Supabase
+      const { error } = await supabase
+        .from('contact_submissions')
+        .insert({
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          subject: formData.subject,
+          message: formData.message.trim(),
+        });
+
+      if (error) throw error;
+      
+      setIsSubmitted(true);
+      
+      // Reset after showing success
+      setTimeout(() => {
+        setIsSubmitted(false);
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      }, 5000);
+    } catch (error: any) {
+      console.error('Contact form error:', error);
+      setSubmitError('Failed to send message. Please try again or email us directly.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -130,6 +150,18 @@ export default function ContactForm() {
             onSubmit={handleSubmit}
             className="space-y-6"
           >
+            {/* Error Banner */}
+            {submitError && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700"
+              >
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <p className="text-sm">{submitError}</p>
+              </motion.div>
+            )}
+
             {/* Name field */}
             <motion.div variants={fadeInUp}>
               <div className="relative">
