@@ -109,8 +109,8 @@ export default function HomeContent({ featuredProducts, newArrivals, categories 
         >
            <div className="relative w-full h-full overflow-hidden rounded-lg bg-gray-100">
              <Image 
-               src="https://images.unsplash.com/photo-1595356700395-6f14b5c1f33f?w=600" 
-               alt="Hero Product" 
+               src={featuredProducts[0]?.images?.[0]?.image_url || "https://images.unsplash.com/photo-1595356700395-6f14b5c1f33f?w=600"} 
+               alt={featuredProducts[0]?.name || "Hero Product"} 
                fill 
                className="object-cover"
              />
@@ -125,8 +125,8 @@ export default function HomeContent({ featuredProducts, newArrivals, categories 
         >
            <div className="relative w-full h-full overflow-hidden rounded-lg bg-gray-100">
              <Image 
-               src="https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=600" 
-               alt="Hero Product" 
+               src={featuredProducts[1]?.images?.[0]?.image_url || "https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=600"} 
+               alt={featuredProducts[1]?.name || "Hero Product"} 
                fill 
                className="object-cover"
              />

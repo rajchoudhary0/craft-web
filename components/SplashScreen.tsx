@@ -83,7 +83,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
     <AnimatePresence mode="wait">
       <motion.div
         key="splash"
-        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-cream dark:bg-[var(--background)]"
+        className="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-cream dark:bg-[var(--background)]"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{ 
