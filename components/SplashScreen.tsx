@@ -183,7 +183,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1 }}
               >
-                {settings?.tagline || "by Raj Choudhary"}
+                {settings?.tagline || "by Raj"}
               </motion.p>
             </motion.div>
 
