@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { ArrowRight, Sparkles, Star } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import ProductCard from '@/components/ui/ProductCard';
+import Testimonials from '@/components/sections/Testimonials';
 
 interface Product {
   id: string;
@@ -273,6 +274,9 @@ export default function HomeContent({ featuredProducts, newArrivals, categories 
           </div>
         </div>
       </section>
+
+      {/* TESTIMONIALS - Customer Reviews */}
+      <Testimonials />
 
       {/* 4. FEATURED / EDITORIAL */}
       <section className="py-32 px-4 relative overflow-hidden bg-text-dark text-white">
